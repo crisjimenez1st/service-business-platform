@@ -1,0 +1,17 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Fallback SPA: cualquier ruta que no sea un archivo estático real
+# (ej. /clients/abc-123, /q/xyz) debe servir index.html para que
+# React Router resuelva la navegación en el cliente -- sin esto,
+# recargar la página en una ruta interna devuelve 404 de Netlify en
+# vez de la app. Redundante con public/_redirects (que Vite copia a
+# dist/_redirects en cada build) pero se declara aquí también para que
+# el comportamiento de deployment quede completo y explícito en un
+# solo archivo versionado, sin depender únicamente de que
+# public/_redirects no se pierda o modifique por accidente.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

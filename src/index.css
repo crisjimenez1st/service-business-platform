@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+/*
+ * Paleta de marca ("brand") en azul-verde profesional — evita el
+ * "look" de sistema gubernamental o ERP clásico. Tailwind v4 usa
+ * @theme para tokens de diseño en CSS en vez de tailwind.config.js.
+ */
+@theme {
+  --color-brand-50: #eff9f9;
+  --color-brand-100: #d7f0f0;
+  --color-brand-200: #b3e2e2;
+  --color-brand-500: #0e9494;
+  --color-brand-600: #0b7d7d;
+  --color-brand-700: #0a6565;
+  --color-brand-800: #0a4f4f;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  overscroll-behavior-y: none;
+}
+
+/* Oculta la barra de scroll en filas horizontales (chips, tabs) sin
+   quitar la funcionalidad de scroll — usado por FilterChips y Tabs. */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* input[type=date] en iOS/Android necesita altura mínima consistente */
+input[type='date'] {
+  min-height: 2.75rem;
+}
