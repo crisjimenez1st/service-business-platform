@@ -348,6 +348,10 @@ export interface Database {
           maps_url: string | null;
           total: number | null;
           paid_amount: number | null;
+          cancellation_reason: string | null;
+          cancellation_category: string | null;
+          cancelled_at: string | null;
+          cancelled_by: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -368,6 +372,10 @@ export interface Database {
           maps_url?: string | null;
           total?: number | null;
           paid_amount?: number | null;
+          cancellation_reason?: string | null;
+          cancellation_category?: string | null;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -614,6 +622,14 @@ export interface Database {
       get_company_technicians: {
         Args: { p_company_id: string };
         Returns: { user_id: string; display_name: string | null; email: string | null }[];
+      };
+      cancel_job: {
+        Args: { p_job_id: string; p_reason: string; p_category?: string | null };
+        Returns: Database['public']['Tables']['jobs']['Row'];
+      };
+      advance_job_status: {
+        Args: { p_job_id: string; p_new_status: string };
+        Returns: Database['public']['Tables']['jobs']['Row'];
       };
     };
     Enums: Record<string, never>;

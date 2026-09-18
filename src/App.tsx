@@ -12,6 +12,8 @@ import QuoteFormPage from './pages/QuoteFormPage';
 import QuoteDetailPage from './pages/QuoteDetailPage';
 import QuotePublicPage from './pages/QuotePublicPage';
 import CalendarPage from './pages/CalendarPage';
+import JobsPage from './pages/JobsPage';
+import JobDetailPage from './pages/JobDetailPage';
 import ComingSoonPage from './pages/ComingSoonPage';
 import { AuthProvider } from './contexts/AuthContext';
 import { CompanyProvider } from './contexts/CompanyContext';
@@ -56,7 +58,8 @@ export default function App() {
                 <Route path="/quotes/new" element={<QuoteFormPage />} />
                 <Route path="/quotes/:id/edit" element={<QuoteFormPage />} />
                 <Route path="/quotes/:id" element={<QuoteDetailPage />} />
-                <Route path="/jobs" element={<ComingSoonPage title={t.nav.jobs} />} />
+                <Route path="/jobs" element={<JobsPage />} />
+                <Route path="/jobs/:id" element={<JobDetailPage />} />
                 <Route path="/more" element={<ComingSoonPage title={t.nav.more} />} />
                 <Route path="/calendar" element={<CalendarPage />} />
                 <Route path="/technicians" element={<ComingSoonPage title={t.nav.technicians} />} />

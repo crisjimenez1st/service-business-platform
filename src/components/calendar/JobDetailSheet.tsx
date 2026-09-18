@@ -102,6 +102,10 @@ export default function JobDetailSheet({
               {t.calendar.viewClientProfile}
             </Button>
           )}
+
+          <Button variant="secondary" fullWidth onClick={() => navigate(`/jobs/${job.id}`)}>
+            {t.jobsPage.viewFullJob}
+          </Button>
         </div>
       </Sheet>
 

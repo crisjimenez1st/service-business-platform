@@ -30,6 +30,10 @@ export function jobRowToDomain(row: JobRow): Job {
     mapsUrl: row.maps_url ?? undefined,
     total: row.total ?? undefined,
     paidAmount: row.paid_amount ?? undefined,
+    cancellationReason: row.cancellation_reason ?? undefined,
+    cancellationCategory: row.cancellation_category ?? undefined,
+    cancelledAt: row.cancelled_at ?? undefined,
+    cancelledBy: row.cancelled_by ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

@@ -108,6 +108,23 @@ export async function getActiveTechnicians(companyId: string): Promise<ServiceRe
   }
 }
 
+/** Jobs reales de un cliente, para su historial en ClientProfilePage -- ver JobHistoryCard. Ordenados por fecha de creación descendente. */
+export async function getClientJobs(companyId: string, clientId: string): Promise<ServiceResult<Job[]>> {
+  try {
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('*')
+      .eq('company_id', companyId)
+      .eq('client_id', clientId)
+      .order('created_at', { ascending: false });
+
+    if (error) return fail(mapSupabaseError(error));
+    return ok(data.map(jobRowToDomain));
+  } catch (err) {
+    return fail(mapSupabaseError(err));
+  }
+}
+
 // ---------- Escritura (siempre vía RPC transaccional) ----------
 
 export async function createJobFromJobDraft(
@@ -159,6 +176,51 @@ export async function scheduleJob(
       p_job_id: jobId,
       p_scheduled_start_at: scheduledStartAt,
       p_scheduled_end_at: scheduledEndAt,
+    });
+    if (error) return fail(mapSupabaseError(error));
+    return ok(jobRowToDomain(data));
+  } catch (err) {
+    return fail(mapSupabaseError(err));
+  }
+}
+
+/**
+ * Cancela un Job (owner/office), con motivo obligatorio -- ver
+ * cancel_job (migración 011). Permitido desde
+ * new/scheduled/en_route/in_progress/paused; rechazado en
+ * completed/cancelled. El Job nunca se borra, queda con su auditoría
+ * completa (cancelledAt/cancelledBy).
+ */
+export async function cancelJob(
+  jobId: string,
+  reason: string,
+  category?: string
+): Promise<ServiceResult<Job>> {
+  try {
+    const { data, error } = await supabase.rpc('cancel_job', {
+      p_job_id: jobId,
+      p_reason: reason,
+      p_category: category ?? null,
+    });
+    if (error) return fail(mapSupabaseError(error));
+    return ok(jobRowToDomain(data));
+  } catch (err) {
+    return fail(mapSupabaseError(err));
+  }
+}
+
+/**
+ * Avanza el estado de un Job un paso (owner/office), sobre cualquier
+ * Job de la empresa -- ver advance_job_status (migración 011). Misma
+ * tabla de transiciones de un paso que usa el técnico; nunca permite
+ * saltos arbitrarios. La programación (new<->scheduled) sigue siendo
+ * exclusiva de scheduleJob, no de esta función.
+ */
+export async function advanceJobStatus(jobId: string, newStatus: string): Promise<ServiceResult<Job>> {
+  try {
+    const { data, error } = await supabase.rpc('advance_job_status', {
+      p_job_id: jobId,
+      p_new_status: newStatus,
     });
     if (error) return fail(mapSupabaseError(error));
     return ok(jobRowToDomain(data));

@@ -1,4 +1,4 @@
-import type { Equipment, MockJob as Job, Opportunity, Client } from '../types';
+import type { Equipment, Opportunity, Client } from '../types';
 import * as db from './localDb';
 import { TABLES } from './tables';
 import { isVisibleOpportunity } from './opportunityService';
@@ -223,11 +223,4 @@ export function getClientEquipment(clientId: string, companyId: string): Equipme
   return db
     .getAllForCompany<Equipment>(TABLES.equipment, companyId)
     .filter((e) => e.clientId === clientId);
-}
-
-export function getClientJobs(clientId: string, companyId: string): Job[] {
-  return db
-    .getAllForCompany<Job>(TABLES.jobs, companyId)
-    .filter((j) => j.clientId === clientId)
-    .sort((a, b) => b.scheduledDate.localeCompare(a.scheduledDate));
 }

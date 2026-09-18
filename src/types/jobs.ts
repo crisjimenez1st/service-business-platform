@@ -227,6 +227,11 @@ export interface Job {
   mapsUrl?: string;
   total?: number;
   paidAmount?: number;
+  /** Presentes solo cuando status='cancelled' -- ver cancel_job (migración 011). */
+  cancellationReason?: string;
+  cancellationCategory?: string;
+  cancelledAt?: string;
+  cancelledBy?: UUID;
   createdAt: string;
   updatedAt: string;
 }

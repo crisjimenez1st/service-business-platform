@@ -11,7 +11,8 @@ import OpportunityCard from '../components/dashboard/OpportunityCard';
 import PostponeModal from '../components/opportunities/PostponeModal';
 import DiscardModal from '../components/opportunities/DiscardModal';
 import ContactSheet from '../components/opportunities/ContactSheet';
-import { getClientEquipment, getClientJobs } from '../services/clientService';
+import { getClientEquipment } from '../services/clientService';
+import { getClientJobs } from '../services/jobService';
 import { isVisibleOpportunity } from '../services/opportunityService';
 import { useOpportunityStore } from '../store/opportunityStore';
 import { useSingleClientStore, useClientStore } from '../store/clientStore';
@@ -22,6 +23,7 @@ import { formatCurrency } from '../utils/currency';
 import { formatDate } from '../utils/dates';
 import { buildWhatsAppLink } from '../utils/whatsapp';
 import { t } from '../i18n/es';
+import type { Job } from '../types';
 
 const TABS = [
   { key: 'summary', label: t.clientProfile.tabsSummary },
@@ -84,10 +86,17 @@ export default function ClientProfilePage() {
     () => (id && companyId ? getClientEquipment(id, companyId) : []),
     [id, companyId]
   );
-  const jobs = useMemo(
-    () => (id && companyId ? getClientJobs(id, companyId) : []),
-    [id, companyId]
-  );
+
+  // Jobs reales de Supabase (a diferencia de equipment/opportunities,
+  // que siguen siendo mock sobre localDb en este bloque) -- getClientJobs
+  // es async, así que se carga en un efecto, no en un useMemo síncrono.
+  const [jobs, setJobs] = useState<Job[]>([]);
+  useEffect(() => {
+    if (!id || !companyId) return;
+    getClientJobs(companyId, id).then((result) => {
+      if (!result.error) setJobs(result.data);
+    });
+  }, [id, companyId]);
 
   // "active" y "contacted" ambas cuentan como vigentes aquí — contactar
   // no debe hacer desaparecer la próxima oportunidad del perfil.
@@ -226,7 +235,7 @@ export default function ClientProfilePage() {
           {jobs.length === 0 ? (
             <EmptyState title={t.clientProfile.noJobs} />
           ) : (
-            jobs.map((job) => <JobHistoryCard key={job.id} job={job} />)
+            jobs.map((job) => <JobHistoryCard key={job.id} job={job} timezone={company?.timezone ?? 'America/Managua'} />)
           )}
         </div>
       )}
