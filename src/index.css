@@ -1,18 +1,22 @@
 @import "tailwindcss";
 
 /*
- * Paleta de marca ("brand") en azul-verde profesional — evita el
- * "look" de sistema gubernamental o ERP clásico. Tailwind v4 usa
+ * Paleta OneFlow: azul confianza #0066FF, turquesa crecimiento #00D1C1,
+ * violeta innovación #8A3FFC, lila equilibrio #EDEBFF. Tailwind v4 usa
  * @theme para tokens de diseño en CSS en vez de tailwind.config.js.
  */
 @theme {
-  --color-brand-50: #eff9f9;
-  --color-brand-100: #d7f0f0;
-  --color-brand-200: #b3e2e2;
-  --color-brand-500: #0e9494;
-  --color-brand-600: #0b7d7d;
-  --color-brand-700: #0a6565;
-  --color-brand-800: #0a4f4f;
+  --color-brand-50: #eef4ff;
+  --color-brand-100: #dce8ff;
+  --color-brand-200: #b9d1ff;
+  --color-brand-500: #2e7dff;
+  --color-brand-600: #0066ff;
+  --color-brand-700: #0052cc;
+  --color-brand-800: #003f9e;
+  --color-flow-teal: #00d1c1;
+  --color-flow-violet: #8a3ffc;
+  --color-flow-lilac: #edebff;
+  --font-brand: "Outfit", ui-sans-serif, system-ui, sans-serif;
 }
 
 html {

@@ -1,13 +1,13 @@
 {
-  "name": "Seguridad ABC — Gestión de Servicios Técnicos",
-  "short_name": "SeguridadABC",
-  "description": "Convierte cada trabajo realizado en futuros ingresos. Gestión de clientes, trabajos y oportunidades para empresas de CCTV y seguridad electrónica.",
+  "name": "OneFlow Med — Toda tu clínica, en un solo flujo",
+  "short_name": "OneFlow Med",
+  "description": "Pacientes, citas, recordatorios por WhatsApp y cobros para clínicas médicas y dentales.",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#f8fafc",
-  "theme_color": "#0b7d7d",
+  "theme_color": "#0066ff",
   "lang": "es-NI",
   "icons": [
     {

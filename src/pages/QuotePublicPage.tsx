@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Shield, MessageCircle } from 'lucide-react';
+import { Building2 as Shield, MessageCircle } from 'lucide-react';
 import { Button, EmptyState, ErrorState, Sheet } from '../components/ui';
 import {
   getPublicQuoteByToken,

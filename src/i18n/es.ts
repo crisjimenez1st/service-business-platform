@@ -23,7 +23,7 @@ export const t = {
   },
   login: {
     title: 'Iniciar sesión',
-    subtitle: 'Accede a tu panel',
+    subtitle: 'Toda tu clínica, en un solo flujo.',
     email: 'Correo electrónico',
     password: 'Contraseña',
     submit: 'Iniciar sesión',

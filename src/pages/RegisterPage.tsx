@@ -1,6 +1,7 @@
+import OneFlowLogo from '../components/brand/OneFlowLogo';
 import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { Shield, Mail, Lock } from 'lucide-react';
+import { Mail, Lock } from 'lucide-react';
 import { Button, Card } from '../components/ui';
 import { useAuth } from '../contexts/useAuth';
 
@@ -49,11 +50,11 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-6 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-brand-600 flex items-center justify-center mb-3">
-            <Shield size={28} className="text-white" />
+          <div className="mb-4">
+            <OneFlowLogo size="lg" />
           </div>
           <h1 className="text-xl font-semibold text-slate-900">Crear cuenta</h1>
-          <p className="text-sm text-slate-500 mt-1">Registra a tus clientes y no olvides avisarles cuándo volver.</p>
+          <p className="text-sm text-slate-500 mt-1">Registra a tus pacientes y no olvides avisarles cuándo volver.</p>
         </div>
 
         <Card>
