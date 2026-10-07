@@ -12,6 +12,7 @@ import { useCurrentCompany } from '../contexts/useCurrentCompany';
 import { useOpportunityStore } from '../store/opportunityStore';
 import { useFollowupStore } from '../store/followupStore';
 import { useTerms } from '../hooks/useTerms';
+import { useMoney } from '../hooks/useMoney';
 import { useClientsById } from '../hooks/useClientsById';
 import { useOpportunityActions } from '../hooks/useOpportunityActions';
 import { getDashboardMetrics, type DashboardMetrics } from '../services/dashboardService';
@@ -35,6 +36,7 @@ export default function DashboardPage() {
   const { clientsById } = useClientsById();
   const actions = useOpportunityActions();
   const terms = useTerms();
+  const money = useMoney();
   const followupCount = useFollowupStore((s) => s.items.length);
   const followupsLoading = useFollowupStore((s) => s.loading);
   const followupsError = useFollowupStore((s) => s.error);
@@ -99,7 +101,7 @@ export default function DashboardPage() {
 
   // Calculados una sola vez -- ver utils/renderMetric.ts: cada uno
   // decide "—" (unavailable) o el valor + insignia "Demo" (mock).
-  const monthSalesMetric = renderMetric(metrics.monthSales, formatCurrency);
+  const monthSalesMetric = renderMetric(metrics.monthSales, money);
   const jobsTodayMetric = renderMetric(metrics.jobsToday);
   const quotesPendingResponseMetric = renderMetric(metrics.quotesPendingResponse);
   const quotesAcceptedThisMonthMetric = renderMetric(metrics.quotesAcceptedThisMonth);
@@ -155,7 +157,7 @@ export default function DashboardPage() {
         />
         <MetricCard
           label={t.dashboard.opportunityValue}
-          value={formatCurrency(totalPotential)}
+          value={money(totalPotential)}
           icon={<TrendingUp size={18} />}
           emphasis
         />
@@ -273,7 +275,7 @@ export default function DashboardPage() {
 
         <div className="mt-3 flex items-center justify-between rounded-xl bg-brand-600 text-white px-4 py-3">
           <span className="text-sm font-medium">{t.dashboard.totalPotential}</span>
-          <span className="text-lg font-semibold">{formatCurrency(totalPotential)}</span>
+          <span className="text-lg font-semibold">{money(totalPotential)}</span>
         </div>
       </section>
 

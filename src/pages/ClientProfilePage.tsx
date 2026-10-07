@@ -18,8 +18,8 @@ import { useOpportunityStore } from '../store/opportunityStore';
 import { useSingleClientStore, useClientStore } from '../store/clientStore';
 import { useClientQuotesStore } from '../store/quoteStore';
 import { useCurrentCompany } from '../contexts/useCurrentCompany';
+import { useMoney } from '../hooks/useMoney';
 import { useOpportunityActions } from '../hooks/useOpportunityActions';
-import { formatCurrency } from '../utils/currency';
 import { formatDate } from '../utils/dates';
 import { buildWhatsAppLink } from '../utils/whatsapp';
 import { t } from '../i18n/es';
@@ -51,6 +51,7 @@ export default function ClientProfilePage() {
   const [editOpen, setEditOpen] = useState(false);
 
   const { company } = useCurrentCompany();
+  const money = useMoney();
   const companyId = company?.id;
   const opportunities = useOpportunityStore((s) => s.opportunities);
   const loadOpportunities = useOpportunityStore((s) => s.load);
@@ -185,13 +186,13 @@ export default function ClientProfilePage() {
             <Card>
               <p className="text-xs text-slate-500">{t.clientProfile.totalBilled}</p>
               <p className="text-lg font-semibold text-slate-900 mt-1">
-                {formatCurrency(client.totalBilled ?? 0)}
+                {money(client.totalBilled ?? 0)}
               </p>
             </Card>
             <Card>
               <p className="text-xs text-slate-500">{t.clientProfile.pendingBalance}</p>
               <p className="text-lg font-semibold text-slate-900 mt-1">
-                {formatCurrency(client.pendingBalance ?? 0)}
+                {money(client.pendingBalance ?? 0)}
               </p>
             </Card>
             <Card>
