@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Sheet } from '../ui';
-import { SECONDARY_NAV } from './navConfig';
+import { useNavItems } from '../../hooks/useNavItems';
 import { t } from '../../i18n/es';
 
 interface MoreSheetProps {
@@ -10,11 +10,12 @@ interface MoreSheetProps {
 
 export default function MoreSheet({ open, onClose }: MoreSheetProps) {
   const navigate = useNavigate();
+  const { secondary } = useNavItems();
 
   return (
     <Sheet open={open} onClose={onClose} title={t.nav.more}>
       <div className="grid grid-cols-2 gap-3">
-        {SECONDARY_NAV.map((item) => (
+        {secondary.map((item) => (
           <button
             key={item.path}
             onClick={() => {

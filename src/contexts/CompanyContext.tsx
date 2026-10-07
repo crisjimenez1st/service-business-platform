@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 import { CompanyContext, type CurrentCompany } from './companyContextDefinition';
+import type { BusinessType } from '../types';
 
 /**
  * Resuelve la empresa activa del usuario autenticado consultando
@@ -76,7 +77,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
     const { data: companyRow, error: companyError } = await supabase
       .from('companies')
-      .select('id, name, currency, logo_url, timezone')
+      .select('id, name, currency, logo_url, timezone, business_type')
       .eq('id', membership.company_id)
       .maybeSingle();
 
@@ -93,6 +94,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       currency: companyRow.currency,
       logoUrl: companyRow.logo_url,
       timezone: companyRow.timezone,
+      businessType: companyRow.business_type as BusinessType,
       role: membership.role,
     });
     setLoading(false);

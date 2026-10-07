@@ -12,8 +12,11 @@ import {
   ShieldCheck,
   BarChart3,
   Settings,
+  BellRing,
 } from 'lucide-react';
 import { t } from '../../i18n/es';
+import type { BusinessTerms } from '../../i18n/businessTerms';
+import type { BusinessType } from '../../types';
 import type { ComponentType } from 'react';
 
 export interface NavItem {
@@ -24,24 +27,56 @@ export interface NavItem {
   icon: ComponentType<{ size?: number; className?: string }>;
 }
 
-/** Los 4 destinos principales + "Más": misma info en móvil y desktop. */
-export const PRIMARY_NAV: NavItem[] = [
-  { label: t.nav.dashboard, shortLabel: 'Inicio', path: '/dashboard', icon: LayoutDashboard },
-  { label: t.nav.clients, path: '/clients', icon: Users },
-  { label: t.nav.jobs, path: '/jobs', icon: Briefcase },
-  { label: t.nav.opportunities, shortLabel: 'Ingresos', path: '/opportunities', icon: TrendingUp },
-];
-
 export const MORE_NAV_ITEM: NavItem = { label: t.nav.more, path: '/more', icon: MoreHorizontal };
 
-/** Contenido del panel "Más" (bottom sheet en móvil, sección extra en sidebar desktop). */
-export const SECONDARY_NAV: NavItem[] = [
-  { label: t.nav.quotes, path: '/quotes', icon: FileText },
-  { label: t.nav.calendar, path: '/calendar', icon: Calendar },
-  { label: t.nav.technicians, path: '/technicians', icon: Wrench },
-  { label: t.nav.payments, path: '/collections', icon: Wallet },
-  { label: t.nav.equipment, path: '/equipment', icon: HardDrive },
-  { label: t.nav.warranties, path: '/warranties', icon: ShieldCheck },
-  { label: t.nav.reports, path: '/reports', icon: BarChart3 },
-  { label: t.nav.settings, path: '/settings', icon: Settings },
-];
+export interface NavItems {
+  /** Los 4 destinos principales (+ "Más" en el BottomNav). */
+  primary: NavItem[];
+  /** Contenido del panel "Más" (bottom sheet en móvil, sección extra en sidebar desktop). */
+  secondary: NavItem[];
+}
+
+/**
+ * Menú según el tipo de negocio. Servicios técnicos conserva el menú
+ * original. Clínicas y "otro negocio" ven un menú reducido, pensado
+ * para gestión de clientes: sin Equipos, Garantías, Reportes ni
+ * Técnicos (las rutas siguen existiendo, solo no se muestran).
+ */
+export function buildNavItems(businessType: BusinessType, terms: BusinessTerms): NavItems {
+  if (businessType === 'technical_services') {
+    return {
+      primary: [
+        { label: t.nav.dashboard, shortLabel: 'Inicio', path: '/dashboard', icon: LayoutDashboard },
+        { label: terms.clients, path: '/clients', icon: Users },
+        { label: terms.jobs, path: '/jobs', icon: Briefcase },
+        { label: t.nav.opportunities, shortLabel: 'Ingresos', path: '/opportunities', icon: TrendingUp },
+      ],
+      secondary: [
+        { label: terms.quotes, path: '/quotes', icon: FileText },
+        { label: terms.calendar, path: '/calendar', icon: Calendar },
+        { label: terms.followupsToday, path: '/followups', icon: BellRing },
+        { label: terms.technicians, path: '/technicians', icon: Wrench },
+        { label: t.nav.payments, path: '/collections', icon: Wallet },
+        { label: t.nav.equipment, path: '/equipment', icon: HardDrive },
+        { label: t.nav.warranties, path: '/warranties', icon: ShieldCheck },
+        { label: t.nav.reports, path: '/reports', icon: BarChart3 },
+        { label: t.nav.settings, path: '/settings', icon: Settings },
+      ],
+    };
+  }
+
+  return {
+    primary: [
+      { label: t.nav.dashboard, shortLabel: 'Inicio', path: '/dashboard', icon: LayoutDashboard },
+      { label: terms.clients, path: '/clients', icon: Users },
+      { label: terms.calendar, path: '/calendar', icon: Calendar },
+      { label: terms.followups, shortLabel: 'Avisos', path: '/followups', icon: BellRing },
+    ],
+    secondary: [
+      { label: terms.jobs, path: '/jobs', icon: Briefcase },
+      { label: terms.quotes, path: '/quotes', icon: FileText },
+      { label: t.nav.payments, path: '/collections', icon: Wallet },
+      { label: t.nav.settings, path: '/settings', icon: Settings },
+    ],
+  };
+}

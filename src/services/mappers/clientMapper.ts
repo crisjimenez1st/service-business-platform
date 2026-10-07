@@ -29,6 +29,7 @@ export function clientRowToDomain(row: ClientRow): Client {
     email: row.email ?? undefined,
     address: row.address ?? '',
     notes: row.notes ?? undefined,
+    contactConsent: row.contact_consent,
     createdAt: row.created_at,
     mapsUrl: undefined,
     totalBilled: undefined,
@@ -46,6 +47,8 @@ export interface ClientDomainInput {
   email?: string;
   address?: string;
   notes?: string;
+  /** false = no contactar (nunca aparece en los avisos de seguimiento). Si no se indica, se asume true al crear. */
+  contactConsent?: boolean;
 }
 
 /** Traduce datos de formulario (camelCase, sin id/companyId/timestamps) a un Insert de Supabase. */
@@ -61,6 +64,7 @@ export function clientDomainToInsertRow(
     email: input.email ?? null,
     address: input.address ?? null,
     notes: input.notes ?? null,
+    contact_consent: input.contactConsent ?? true,
   };
 }
 
@@ -75,5 +79,6 @@ export function clientDomainToUpdateRow(
   if (patch.email !== undefined) update.email = patch.email;
   if (patch.address !== undefined) update.address = patch.address;
   if (patch.notes !== undefined) update.notes = patch.notes;
+  if (patch.contactConsent !== undefined) update.contact_consent = patch.contactConsent;
   return update;
 }

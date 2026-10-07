@@ -57,6 +57,7 @@ export interface Database {
           currency: string;
           logo_url: string | null;
           timezone: string;
+          business_type: string;
           created_at: string;
           updated_at: string;
         };
@@ -132,6 +133,7 @@ export interface Database {
           email: string | null;
           address: string | null;
           notes: string | null;
+          contact_consent: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -144,6 +146,7 @@ export interface Database {
           email?: string | null;
           address?: string | null;
           notes?: string | null;
+          contact_consent?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -499,8 +502,43 @@ export interface Database {
     Views: Record<string, never>;
     Functions: {
       create_company_for_current_user: {
-        Args: { p_company_name: string };
+        Args: { p_company_name: string; p_business_type?: string };
         Returns: string;
+      };
+      set_company_business_type: {
+        Args: { p_company_id: string; p_business_type: string };
+        Returns: Database['public']['Tables']['companies']['Row'];
+      };
+      get_followups_due: {
+        Args: { p_company_id: string };
+        Returns: {
+          opportunity_id: string;
+          client_id: string;
+          client_name: string;
+          client_phone: string;
+          client_whatsapp: string | null;
+          category: string;
+          title: string;
+          reason: string | null;
+          status: string;
+          due_date: string;
+          days_overdue: number;
+          last_contacted_at: string | null;
+          last_visit_at: string | null;
+        }[];
+      };
+      create_client_with_followup: {
+        Args: {
+          p_company_id: string;
+          p_name: string;
+          p_phone: string;
+          p_whatsapp?: string | null;
+          p_contact_consent?: boolean;
+          p_followup_due_date?: string | null;
+          p_followup_title?: string | null;
+          p_followup_reason?: string | null;
+        };
+        Returns: Database['public']['Tables']['clients']['Row'];
       };
       create_quote_from_opportunity: {
         Args: {

@@ -11,7 +11,8 @@ export type OpportunityCategory =
   | 'inactive_client' // cliente sin compras hace tiempo
   | 'equipment_replacement' // equipo próximo a fin de vida útil
   | 'expansion' // posible ampliación del sistema
-  | 'upsell'; // UPS, HDD, limpieza, actualización, renovación de contrato
+  | 'upsell' // UPS, HDD, limpieza, actualización, renovación de contrato
+  | 'recall'; // seguimiento de cliente/paciente: "volver en 2 meses" (clínicas)
 
 export type OpportunityStatus =
   | 'active'
@@ -46,4 +47,5 @@ export const OPPORTUNITY_CATEGORY_LABELS: Record<OpportunityCategory, string> = 
   equipment_replacement: 'Reemplazo de equipo',
   expansion: 'Ampliación',
   upsell: 'Venta adicional',
+  recall: 'Seguimiento',
 };
