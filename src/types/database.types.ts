@@ -787,6 +787,18 @@ export interface Database {
         Args: { p_job_id: string; p_technician_id?: string | null };
         Returns: Database['public']['Tables']['jobs']['Row'];
       };
+      create_appointment: {
+        Args: {
+          p_company_id: string;
+          p_client_id: string;
+          p_service: string;
+          p_scheduled_start_at: string;
+          p_scheduled_end_at?: string | null;
+          p_total?: number | null;
+          p_notes?: string | null;
+        };
+        Returns: Database['public']['Tables']['jobs']['Row'];
+      };
       schedule_job: {
         Args: { p_job_id: string; p_scheduled_start_at?: string | null; p_scheduled_end_at?: string | null };
         Returns: Database['public']['Tables']['jobs']['Row'];

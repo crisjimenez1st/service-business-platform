@@ -1,3 +1,4 @@
+import NewAppointmentButton from '../components/calendar/NewAppointmentButton';
 import { useEffect, useMemo, useState } from 'react';
 import { ErrorState } from '../components/ui';
 import CalendarNav, { type CalendarViewMode } from '../components/calendar/CalendarNav';
@@ -184,7 +185,12 @@ export default function CalendarPage() {
 
   return (
     <div className="space-y-4 pb-4">
-      <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">{t.calendar.title}</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">{t.calendar.title}</h1>
+        <NewAppointmentButton
+          onCreated={() => companyId && loadRange(companyId, rangeStart.toISOString(), rangeEnd.toISOString())}
+        />
+      </div>
 
       <CalendarNav
         viewMode={viewMode}

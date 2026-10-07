@@ -11,6 +11,12 @@ const BUSINESS_ERRORS: { match: string; message: string }[] = [
   { match: 'Entrada no encontrada', message: 'Esa entrada ya no está en la lista.' },
   { match: 'no admite recordatorio', message: 'Esta cita ya no admite recordatorio.' },
   { match: 'Cita no encontrada', message: 'No encontramos esa cita.' },
+  { match: 'Elige el servicio', message: 'Elige el servicio de la cita.' },
+  { match: 'Indica la fecha', message: 'Indica la fecha y hora de la cita.' },
+  { match: 'hora de fin', message: 'La hora de fin no puede ser anterior a la de inicio.' },
+  { match: 'precio debe ser', message: 'El precio debe ser mayor a cero (o déjalo vacío).' },
+  { match: 'no pertenece a esta empresa', message: 'Esa persona no pertenece a este negocio.' },
+  { match: 'demasiado largo', message: 'El nombre del servicio es demasiado largo.' },
   { match: 'No autorizado', message: 'No tienes permiso para realizar esta acción.' },
   { match: 'No autenticado', message: 'Tu sesión expiró. Vuelve a iniciar sesión.' },
 ];

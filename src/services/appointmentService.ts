@@ -112,3 +112,31 @@ export async function respondPublicAppointment(
     return fail(mapSupabaseError(err));
   }
 }
+
+export interface NewAppointmentInput {
+  clientId: string;
+  service: string;
+  startAtIso: string;
+  endAtIso?: string | null;
+  total?: number | null;
+  notes?: string | null;
+}
+
+/** Crea una cita directa (sin cotización) ya programada. Devuelve el id del trabajo creado. */
+export async function createAppointment(companyId: string, input: NewAppointmentInput): Promise<ServiceResult<string>> {
+  try {
+    const { data, error } = await supabase.rpc('create_appointment', {
+      p_company_id: companyId,
+      p_client_id: input.clientId,
+      p_service: input.service,
+      p_scheduled_start_at: input.startAtIso,
+      p_scheduled_end_at: input.endAtIso ?? null,
+      p_total: input.total ?? null,
+      p_notes: input.notes ?? null,
+    });
+    if (error) return fail(mapAgendaError(error));
+    return ok(data.id);
+  } catch (err) {
+    return fail(mapAgendaError(err));
+  }
+}
