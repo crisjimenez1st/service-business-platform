@@ -3,10 +3,11 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { Shield } from 'lucide-react';
 import { Button, Card } from '../components/ui';
 import BusinessTypePicker from '../components/settings/BusinessTypePicker';
+import CurrencyPicker from '../components/settings/CurrencyPicker';
 import { useAuth } from '../contexts/useAuth';
 import { useCurrentCompany } from '../contexts/useCurrentCompany';
 import { createCompany } from '../services/companySetupService';
-import type { BusinessType } from '../types';
+import type { BusinessType, CurrencyCode } from '../types';
 
 /** Primer paso de una cuenta nueva: nombre del negocio + tipo (decide el lenguaje y el menú). */
 export default function OnboardingPage() {
@@ -15,6 +16,7 @@ export default function OnboardingPage() {
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [type, setType] = useState<BusinessType | null>(null);
+  const [currency, setCurrency] = useState<CurrencyCode>('NIO');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +36,7 @@ export default function OnboardingPage() {
     }
     setSaving(true);
     setError(null);
-    const result = await createCompany(name.trim(), type);
+    const result = await createCompany(name.trim(), type, currency);
     if (result.error) {
       setSaving(false);
       setError(result.error.message);
@@ -76,6 +78,12 @@ export default function OnboardingPage() {
             <div>
               <p className="block text-sm font-medium text-slate-700 mb-2">¿Qué tipo de negocio es?</p>
               <BusinessTypePicker value={type} onChange={setType} disabled={saving} />
+            </div>
+
+            <div>
+              <p className="block text-sm font-medium text-slate-700 mb-2">¿En qué moneda cobras?</p>
+              <CurrencyPicker value={currency} onChange={setCurrency} disabled={saving} />
+              <p className="text-xs text-slate-500 mt-2">Es la moneda por defecto. Podrás cambiarla en Configuración.</p>
             </div>
 
             {error && (

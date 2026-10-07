@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { Button, Card } from '../components/ui';
 import BusinessTypePicker from '../components/settings/BusinessTypePicker';
+import CurrencyPicker from '../components/settings/CurrencyPicker';
 import { useCurrentCompany } from '../contexts/useCurrentCompany';
-import { setBusinessType } from '../services/companySetupService';
-import type { BusinessType } from '../types';
+import { setBusinessType, setCompanyCurrency } from '../services/companySetupService';
+import type { BusinessType, CurrencyCode } from '../types';
 import { t } from '../i18n/es';
 
 /** Configuración mínima: tipo de negocio (solo owner). Cambiarlo solo cambia el lenguaje y el menú; no toca datos. */
 export default function SettingsPage() {
   const { company, refresh } = useCurrentCompany();
   const [selected, setSelected] = useState<BusinessType | null>(null);
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -17,21 +19,34 @@ export default function SettingsPage() {
   if (!company) return null;
   const isOwner = company.role === 'owner';
   const current = selected ?? company.businessType;
-  const changed = current !== company.businessType;
+  const currentCurrency = selectedCurrency ?? (company.currency as CurrencyCode);
+  const changed = current !== company.businessType || currentCurrency !== company.currency;
 
   async function handleSave() {
     if (!company) return;
     setSaving(true);
     setError(null);
     setSaved(false);
-    const result = await setBusinessType(company.id, current);
-    if (result.error) {
-      setSaving(false);
-      setError(result.error.message);
-      return;
+    if (current !== company.businessType) {
+      const result = await setBusinessType(company.id, current);
+      if (result.error) {
+        setSaving(false);
+        setError(result.error.message);
+        return;
+      }
+    }
+    if (currentCurrency !== company.currency) {
+      const result = await setCompanyCurrency(company.id, currentCurrency);
+      if (result.error) {
+        setSaving(false);
+        setError(result.error.message);
+        await refresh();
+        return;
+      }
     }
     await refresh();
     setSelected(null);
+    setSelectedCurrency(null);
     setSaving(false);
     setSaved(true);
   }
@@ -62,6 +77,21 @@ export default function SettingsPage() {
           {!isOwner && (
             <p className="text-sm text-slate-500 mt-3">Solo el dueño del negocio puede cambiar esto.</p>
           )}
+        </div>
+
+        <div>
+          <p className="text-sm font-medium text-slate-700 mb-2">Moneda por defecto</p>
+          <p className="text-sm text-slate-500 mb-3">
+            Se usa en los trabajos nuevos. Los trabajos que ya existen conservan su moneda.
+          </p>
+          <CurrencyPicker
+            value={currentCurrency}
+            onChange={(v) => {
+              setSelectedCurrency(v);
+              setSaved(false);
+            }}
+            disabled={!isOwner || saving}
+          />
         </div>
 
         {error && (
