@@ -14,6 +14,7 @@ import { useCurrentCompany } from '../contexts/useCurrentCompany';
 import { useFollowupStore } from '../store/followupStore';
 import { useTomorrowStore } from '../store/tomorrowStore';
 import { useWaitlistStore } from '../store/waitlistStore';
+import { useServiceRulesStore } from '../store/serviceRulesStore';
 import { useClientsById } from '../hooks/useClientsById';
 import { buildAppointmentLink } from '../services/appointmentService';
 import { useTerms } from '../hooks/useTerms';
@@ -104,6 +105,8 @@ export default function FollowupsPage() {
     if (err) setTomorrowActionError(err.message);
   }
 
+  const serviceRules = useServiceRulesStore((s) => s.rules);
+  const loadServiceRules = useServiceRulesStore((s) => s.load);
   const waitlist = useWaitlistStore((s) => s.entries);
   const waitlistSent = useWaitlistStore((s) => s.sentIds);
   const waitlistLoading = useWaitlistStore((s) => s.loading);
@@ -128,8 +131,9 @@ export default function FollowupsPage() {
       loadInactive(companyId);
       loadTomorrow(companyId, timezone);
       loadWaitlist(companyId);
+      loadServiceRules(companyId);
     }
-  }, [companyId, timezone, load, loadInactive, loadTomorrow, loadWaitlist]);
+  }, [companyId, timezone, load, loadInactive, loadTomorrow, loadWaitlist, loadServiceRules]);
 
   // Los inactivos se muestran con la misma tarjeta: opportunityId = id del cliente.
   const inactiveItems = useMemo<FollowupDue[]>(
@@ -338,6 +342,7 @@ export default function FollowupsPage() {
           clients={clients}
           excludeClientIds={waitlist.map((w) => w.clientId)}
           clientLabel={terms.client}
+          serviceOptions={serviceRules.map((r) => r.serviceName)}
           onClose={() => setAddOpen(false)}
           onSave={async (input) => (await addToWaitlist(input))?.message ?? null}
         />
@@ -352,7 +357,7 @@ export default function FollowupsPage() {
             key={entry.id}
             open
             clientName={client.name}
-            initialMessage={waitlistMessage(company?.businessType, client.name, company?.name ?? '', slotText)}
+            initialMessage={waitlistMessage(company?.businessType, client.name, company?.name ?? '', slotText, entry.service)}
             onClose={() => setWaitlistFor(null)}
             onSend={(message) => {
               const number = toWhatsAppNumber(client.whatsapp || client.phone, timezone);

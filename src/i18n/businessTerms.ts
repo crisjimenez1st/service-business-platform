@@ -159,10 +159,11 @@ export function waitlistMessage(
   type: BusinessType | undefined,
   clientName: string,
   companyName: string,
-  slotText: string
+  slotText: string,
+  service?: string
 ): string {
   const firstName = clientName.trim().split(/\s+/)[0] || clientName;
   const what = type === 'technical_services' ? 'visita' : 'cita';
   const when = slotText ? ` ${slotText}` : '';
-  return `Hola ${firstName}, te escribimos de ${companyName}. Se liberó un espacio para una ${what}${when}. ¿Te interesa tomarlo?`;
+  return `Hola ${firstName}, te escribimos de ${companyName}. Se liberó un espacio para ${service ? `tu ${service.toLowerCase()}` : `una ${what}`}${when}. ¿Te interesa tomarlo?`;
 }

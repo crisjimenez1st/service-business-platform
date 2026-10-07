@@ -9,13 +9,15 @@ interface AddToWaitlistSheetProps {
   /** Ids ya en la lista (no se ofrecen de nuevo). */
   excludeClientIds: string[];
   clientLabel: string;
+  /** Servicios ya definidos en las reglas de regreso (se ofrecen como opciones). */
+  serviceOptions: string[];
   onClose: () => void;
   /** Devuelve un mensaje de error o null si se guardó. */
   onSave: (input: { clientId: string; note?: string; service?: string }) => Promise<string | null>;
 }
 
 /** Agregar a alguien a la lista de espera: buscar, nota ("prefiere mañanas") y servicio opcional. Se monta solo al abrir. */
-export default function AddToWaitlistSheet({ open, clients, excludeClientIds, clientLabel, onClose, onSave }: AddToWaitlistSheetProps) {
+export default function AddToWaitlistSheet({ open, clients, excludeClientIds, clientLabel, serviceOptions, onClose, onSave }: AddToWaitlistSheetProps) {
   const [query, setQuery] = useState('');
   const [clientId, setClientId] = useState<string | null>(null);
   const [note, setNote] = useState('');
@@ -36,6 +38,10 @@ export default function AddToWaitlistSheet({ open, clients, excludeClientIds, cl
   async function handleSave() {
     if (!clientId) {
       setError(`Elige a la persona (${clientLabel.toLowerCase()}).`);
+      return;
+    }
+    if (!service.trim()) {
+      setError('Elige el servicio que necesita, para saber qué aviso enviarle.');
       return;
     }
     setSaving(true);
@@ -117,15 +123,34 @@ export default function AddToWaitlistSheet({ open, clients, excludeClientIds, cl
 
         <div>
           <label htmlFor="wl-service" className="block text-sm font-medium text-slate-700 mb-1.5">
-            Servicio (opcional)
+            Servicio
           </label>
+          {serviceOptions.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {serviceOptions.map((name) => (
+                <button
+                  key={name}
+                  type="button"
+                  onClick={() => setService(name)}
+                  className={[
+                    'px-3 min-h-9 rounded-full border text-sm',
+                    service === name
+                      ? 'bg-brand-600 border-brand-600 text-white'
+                      : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50',
+                  ].join(' ')}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+          )}
           <input
             id="wl-service"
             type="text"
             value={service}
             onChange={(e) => setService(e.target.value)}
             maxLength={120}
-            placeholder="Ej. Limpieza"
+            placeholder={serviceOptions.length > 0 ? 'O escribe otro servicio' : 'Ej. Limpieza dental'}
             className={INPUT_CLASS}
           />
         </div>
