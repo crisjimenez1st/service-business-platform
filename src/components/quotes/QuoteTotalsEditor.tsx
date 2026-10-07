@@ -1,3 +1,4 @@
+import type { CurrencyCode } from '../../types';
 import { Card } from '../ui';
 import { formatCurrency } from '../../utils/currency';
 import { t } from '../../i18n/es';
@@ -9,6 +10,7 @@ interface QuoteTotalsEditorProps {
   total: number;
   onDiscountChange: (value: number) => void;
   onTaxChange: (value: number) => void;
+  currency: CurrencyCode;
 }
 
 /**
@@ -22,13 +24,14 @@ export default function QuoteTotalsEditor({
   total,
   onDiscountChange,
   onTaxChange,
+  currency,
 }: QuoteTotalsEditorProps) {
   return (
     <Card>
       <div className="space-y-3">
         <div className="flex items-center justify-between text-sm">
           <span className="text-slate-500">{t.quotes.subtotal}</span>
-          <span className="font-medium text-slate-900">{formatCurrency(subtotal)}</span>
+          <span className="font-medium text-slate-900">{formatCurrency(subtotal, currency)}</span>
         </div>
 
         <div className="flex items-center justify-between gap-3">
@@ -59,7 +62,7 @@ export default function QuoteTotalsEditor({
 
         <div className="flex items-center justify-between pt-3 border-t border-slate-200">
           <span className="font-semibold text-slate-900">{t.quotes.grandTotal}</span>
-          <span className="text-lg font-semibold text-brand-700">{formatCurrency(total)}</span>
+          <span className="text-lg font-semibold text-brand-700">{formatCurrency(total, currency)}</span>
         </div>
       </div>
     </Card>

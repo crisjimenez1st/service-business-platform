@@ -527,6 +527,21 @@ export interface Database {
           last_visit_at: string | null;
         }[];
       };
+      get_inactive_clients: {
+        Args: { p_company_id: string; p_months?: number };
+        Returns: {
+          client_id: string;
+          client_name: string;
+          client_phone: string;
+          client_whatsapp: string | null;
+          last_visit_at: string;
+          days_since_visit: number;
+        }[];
+      };
+      resolve_inactive_client: {
+        Args: { p_company_id: string; p_client_id: string; p_action: string; p_date?: string | null };
+        Returns: string;
+      };
       create_client_with_followup: {
         Args: {
           p_company_id: string;

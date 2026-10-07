@@ -56,6 +56,8 @@ export interface Quote {
   discount: number;
   tax: number;
   total: number;
+  /** Moneda de la cotización, congelada al crearla (quotes.currency, migración 015). */
+  currency: CurrencyCode;
   createdAt: string;
   updatedAt: string;
   sentAt?: string;

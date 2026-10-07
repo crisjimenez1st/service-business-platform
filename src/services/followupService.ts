@@ -1,4 +1,4 @@
-import type { FollowupDue } from '../types/followup';
+import type { FollowupDue, InactiveClient, InactiveResolution } from '../types/followup';
 import { supabase } from '../lib/supabase';
 import { createOpportunity } from './opportunityService';
 import { mapSupabaseError, ok, fail, type ServiceResult } from './errors/serviceError';
@@ -71,4 +71,45 @@ export async function createFollowup(
     dueDate: input.dueDate,
   });
   return result.error ? fail(result.error) : ok(null);
+}
+
+/** Clientes que dejaron de venir hace más de `months` meses (por defecto 6). Excluye consentimiento negado, citas futuras y seguimientos ya gestionados. */
+export async function getInactiveClients(companyId: string, months = 6): Promise<ServiceResult<InactiveClient[]>> {
+  try {
+    const { data, error } = await supabase.rpc('get_inactive_clients', { p_company_id: companyId, p_months: months });
+    if (error) return fail(mapSupabaseError(error));
+    return ok(
+      data.map((r) => ({
+        clientId: r.client_id,
+        clientName: r.client_name,
+        clientPhone: r.client_phone,
+        clientWhatsapp: r.client_whatsapp ?? undefined,
+        lastVisitAt: r.last_visit_at,
+        daysSinceVisit: r.days_since_visit,
+      }))
+    );
+  } catch (err) {
+    return fail(mapSupabaseError(err));
+  }
+}
+
+/** Guarda el resultado de avisar a un inactivo para que no reaparezca. `date` (YYYY-MM-DD) solo aplica a 'postponed'. */
+export async function resolveInactiveClient(
+  companyId: string,
+  clientId: string,
+  action: InactiveResolution,
+  date?: string
+): Promise<ServiceResult<null>> {
+  try {
+    const { error } = await supabase.rpc('resolve_inactive_client', {
+      p_company_id: companyId,
+      p_client_id: clientId,
+      p_action: action,
+      p_date: date ?? null,
+    });
+    if (error) return fail(mapSupabaseError(error));
+    return ok(null);
+  } catch (err) {
+    return fail(mapSupabaseError(err));
+  }
 }

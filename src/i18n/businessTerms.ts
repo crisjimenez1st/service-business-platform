@@ -119,3 +119,30 @@ export function followupMessage(type: BusinessType | undefined, clientName: stri
       return `Hola ${firstName}, te escribimos de ${companyName}. Es momento de coordinar tu próxima visita. ¿Cuándo te viene bien?`;
   }
 }
+
+/** Mensaje para quien dejó de venir. Genérico: sin tratamientos ni datos médicos. */
+export function inactiveMessage(type: BusinessType | undefined, clientName: string, companyName: string): string {
+  const firstName = clientName.trim().split(/\s+/)[0] || clientName;
+  switch (type) {
+    case 'dental':
+    case 'medical':
+      return `Hola ${firstName}, te escribimos de ${companyName}. Hace tiempo que no te vemos y queremos saber cómo estás. ¿Te agendamos una cita para tu control?`;
+    case 'other':
+      return `Hola ${firstName}, te escribimos de ${companyName}. Hace tiempo que no nos visitas y nos encantaría verte de nuevo. ¿Te agendamos una cita?`;
+    case 'technical_services':
+    default:
+      return `Hola ${firstName}, te escribimos de ${companyName}. Hace tiempo que no coordinamos una visita contigo. ¿Quieres que agendemos una revisión?`;
+  }
+}
+
+/** Mensaje para confirmar una cita de mañana. Genérico: sin tratamientos ni datos médicos. */
+export function appointmentConfirmMessage(
+  type: BusinessType | undefined,
+  clientName: string,
+  companyName: string,
+  timeText: string
+): string {
+  const firstName = clientName.trim().split(/\s+/)[0] || clientName;
+  const what = type === 'technical_services' ? 'visita' : 'cita';
+  return `Hola ${firstName}, te escribimos de ${companyName}. Te recordamos tu ${what} de mañana a las ${timeText}. ¿Nos confirmas que podrás asistir?`;
+}

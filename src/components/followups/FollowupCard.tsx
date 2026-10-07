@@ -5,6 +5,8 @@ import { formatCalendarDate } from '../../utils/timezone';
 
 interface FollowupCardProps {
   item: FollowupDue;
+  /** Reemplaza la etiqueta de atraso (ej. "Hace 8 meses" en pacientes inactivos). */
+  badgeText?: string;
   sent: boolean;
   busy: boolean;
   onWhatsApp: () => void;
@@ -19,7 +21,7 @@ function dueLabel(days: number): { text: string; tone: 'warning' | 'danger' | 'i
   return { text: `Hace ${days} días`, tone: days > 14 ? 'danger' : 'warning' };
 }
 
-export default function FollowupCard({ item, sent, busy, onWhatsApp, onBooked, onLater, onNotInterested }: FollowupCardProps) {
+export default function FollowupCard({ item, badgeText, sent, busy, onWhatsApp, onBooked, onLater, onNotInterested }: FollowupCardProps) {
   const due = dueLabel(item.daysOverdue);
   const phone = item.clientWhatsapp || item.clientPhone;
 
@@ -33,7 +35,7 @@ export default function FollowupCard({ item, sent, busy, onWhatsApp, onBooked, o
             <p className="text-xs text-slate-500 mt-0.5">Última visita: {formatCalendarDate(item.lastVisitAt.slice(0, 10))}</p>
           )}
         </div>
-        <Badge tone={due.tone}>{due.text}</Badge>
+        <Badge tone={badgeText ? 'warning' : due.tone}>{badgeText ?? due.text}</Badge>
       </div>
 
       {!sent ? (

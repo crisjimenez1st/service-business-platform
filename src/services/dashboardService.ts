@@ -47,7 +47,7 @@ export interface DashboardMetrics {
  * dashboard (jobsToday, que sigue mock) no se ve afectado por ese
  * fallo, cada fuente se resuelve de forma independiente.
  */
-export async function getDashboardMetrics(companyId: string): Promise<DashboardMetrics> {
+export async function getDashboardMetrics(companyId: string, companyCurrency: string = 'NIO'): Promise<DashboardMetrics> {
   const todayJobs = getMockTodayJobs(companyId);
 
   // Cada fuente se resuelve de forma independiente: si una falla, solo
@@ -89,6 +89,10 @@ export async function getDashboardMetrics(companyId: string): Promise<DashboardM
     todayJobs,
     quotesPendingResponse: { status: 'real', value: pendingQuotes.length },
     quotesAcceptedThisMonth: { status: 'real', value: acceptedThisMonth.length },
-    quotesPendingValue: { status: 'real', value: pendingQuotes.reduce((sum, q) => sum + q.total, 0) },
+    // Solo cotizaciones en la moneda del negocio: nunca se suman monedas distintas.
+    quotesPendingValue: {
+      status: 'real',
+      value: pendingQuotes.filter((q) => q.currency === companyCurrency).reduce((sum, q) => sum + q.total, 0),
+    },
   };
 }

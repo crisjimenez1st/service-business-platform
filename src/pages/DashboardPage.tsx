@@ -62,13 +62,13 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!companyId) return;
     let cancelled = false;
-    getDashboardMetrics(companyId).then((result) => {
+    getDashboardMetrics(companyId, company?.currency).then((result) => {
       if (!cancelled) setMetrics(result);
     });
     return () => {
       cancelled = true;
     };
-  }, [companyId]);
+  }, [companyId, company?.currency]);
 
   // "active" y "contacted" se muestran igual: contactar a un cliente no
   // debe hacer desaparecer la oportunidad, solo marcarla visualmente.
@@ -105,7 +105,7 @@ export default function DashboardPage() {
   const jobsTodayMetric = renderMetric(metrics.jobsToday);
   const quotesPendingResponseMetric = renderMetric(metrics.quotesPendingResponse);
   const quotesAcceptedThisMonthMetric = renderMetric(metrics.quotesAcceptedThisMonth);
-  const quotesPendingValueMetric = renderMetric(metrics.quotesPendingValue, formatCurrency);
+  const quotesPendingValueMetric = renderMetric(metrics.quotesPendingValue, money);
 
   return (
     <div className="space-y-6 pb-4">

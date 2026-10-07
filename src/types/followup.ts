@@ -16,3 +16,16 @@ export interface FollowupDue {
   lastContactedAt?: string;
   lastVisitAt?: string;
 }
+
+/** Cliente que dejó de venir (get_inactive_clients, migración 015). */
+export interface InactiveClient {
+  clientId: UUID;
+  clientName: string;
+  clientPhone: string;
+  clientWhatsapp?: string;
+  lastVisitAt: string;
+  daysSinceVisit: number;
+}
+
+/** Resultado de avisar a un cliente inactivo (resolve_inactive_client). */
+export type InactiveResolution = 'converted' | 'postponed' | 'discarded';

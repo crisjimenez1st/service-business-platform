@@ -127,7 +127,7 @@ export default function QuoteDetailPage() {
   const whatsappMessage = quoteWhatsAppMessage(
     client.name,
     quote.quoteNumber,
-    formatCurrency(quote.total),
+    formatCurrency(quote.total, quote.currency),
     publicLink
   );
 
@@ -244,13 +244,14 @@ export default function QuoteDetailPage() {
         )}
       </Card>
 
-      <QuoteItemsList items={quote.items} />
+      <QuoteItemsList items={quote.items} currency={quote.currency} />
 
       <QuoteTotalsSummary
         subtotal={quote.subtotal}
         discount={quote.discount}
         tax={quote.tax}
         total={quote.total}
+        currency={quote.currency}
       />
 
       {quote.notes && (
@@ -372,6 +373,7 @@ export default function QuoteDetailPage() {
         clientName={client.name}
         title={jobDraft?.title ?? quote.items.map((i) => i.description).join(', ')}
         estimatedTotal={jobDraft?.estimatedTotal ?? quote.total}
+        currency={quote.currency}
       />
     </div>
   );

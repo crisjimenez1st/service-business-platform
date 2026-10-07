@@ -49,7 +49,7 @@ export default function QuoteRow({ quote, clientName }: QuoteRowProps) {
           </div>
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 text-sm">
             <span className="text-slate-500">{formatDateShort(quote.issueDate)}</span>
-            <span className="font-semibold text-slate-900">{formatCurrency(quote.total)}</span>
+            <span className="font-semibold text-slate-900">{formatCurrency(quote.total, quote.currency)}</span>
           </div>
           {viewedNote && (
             <div className="flex items-center gap-1 text-xs text-slate-500 mt-2">
@@ -69,7 +69,7 @@ export default function QuoteRow({ quote, clientName }: QuoteRowProps) {
         <td className="py-3 px-4 text-sm text-slate-900">{clientName}</td>
         <td className="py-3 px-4 text-sm text-slate-500">{formatDateShort(quote.issueDate)}</td>
         <td className="py-3 px-4 text-sm font-semibold text-slate-900 text-right">
-          {formatCurrency(quote.total)}
+          {formatCurrency(quote.total, quote.currency)}
         </td>
         <td className="py-3 px-4 text-right">
           <Badge tone={QUOTE_STATUS_TONES[effectiveStatus]}>
