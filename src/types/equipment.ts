@@ -39,19 +39,9 @@ export interface Warranty {
   status: WarrantyStatus;
 }
 
-export type PaymentMethod = 'cash' | 'transfer' | 'card' | 'other';
-export type PaymentStatus = 'paid' | 'partial' | 'pending' | 'overdue';
-
-export interface Payment {
-  id: UUID;
-  companyId: UUID;
-  clientId: UUID;
-  jobId?: UUID;
-  amount: number;
-  method: PaymentMethod;
-  paidAt: string;
-  notes?: string;
-}
+// Los tipos de pagos de la Fase 1/2 (Payment, PaymentMethod, PaymentStatus sobre
+// localDb) se eliminaron: nadie los usaba y chocaban con los reales del
+// Bloque 6 -- ver types/payments.ts (tabla payments de Supabase).
 
 export interface MaintenanceSchedule {
   id: UUID;

@@ -348,6 +348,8 @@ export interface Database {
           maps_url: string | null;
           total: number | null;
           paid_amount: number | null;
+          currency: string;
+          due_date: string | null;
           cancellation_reason: string | null;
           cancellation_category: string | null;
           cancelled_at: string | null;
@@ -372,6 +374,8 @@ export interface Database {
           maps_url?: string | null;
           total?: number | null;
           paid_amount?: number | null;
+          currency?: string;
+          due_date?: string | null;
           cancellation_reason?: string | null;
           cancellation_category?: string | null;
           cancelled_at?: string | null;
@@ -380,6 +384,29 @@ export interface Database {
           updated_at?: string;
         };
         Update: Partial<Database['public']['Tables']['jobs']['Insert']>;
+        Relationships: [];
+      };
+
+      payments: {
+        Row: {
+          id: string;
+          company_id: string;
+          job_id: string;
+          amount: number;
+          payment_type: string;
+          method: string;
+          paid_at: string;
+          reference: string | null;
+          note: string | null;
+          recorded_by: string | null;
+          voided_at: string | null;
+          voided_by: string | null;
+          void_reason: string | null;
+          created_at: string;
+        };
+        /** Solo lectura desde el cliente: escribir pasa siempre por record_payment/void_payment. */
+        Insert: never;
+        Update: never;
         Relationships: [];
       };
 
@@ -626,6 +653,81 @@ export interface Database {
       cancel_job: {
         Args: { p_job_id: string; p_reason: string; p_category?: string | null };
         Returns: Database['public']['Tables']['jobs']['Row'];
+      };
+      set_job_financial_terms: {
+        Args: { p_job_id: string; p_total: number; p_due_date?: string | null };
+        Returns: Database['public']['Tables']['jobs']['Row'];
+      };
+      record_payment: {
+        Args: {
+          p_job_id: string;
+          p_amount: number;
+          p_payment_type: string;
+          p_method: string;
+          p_paid_at?: string;
+          p_reference?: string | null;
+          p_note?: string | null;
+        };
+        Returns: Database['public']['Tables']['jobs']['Row'];
+      };
+      void_payment: {
+        Args: { p_payment_id: string; p_void_reason: string };
+        Returns: Database['public']['Tables']['jobs']['Row'];
+      };
+      get_job_payments: {
+        Args: { p_job_id: string };
+        Returns: {
+          id: string;
+          amount: number;
+          payment_type: string;
+          method: string;
+          paid_at: string;
+          reference: string | null;
+          note: string | null;
+          recorded_by: string | null;
+          voided_at: string | null;
+          voided_by: string | null;
+          void_reason: string | null;
+          created_at: string;
+        }[];
+      };
+      get_company_receivables: {
+        Args: { p_company_id: string };
+        Returns: {
+          job_id: string;
+          client_id: string;
+          client_name: string;
+          service_type: string;
+          status: string;
+          total: number;
+          paid_amount: number;
+          balance: number;
+          currency: string;
+          due_date: string | null;
+          payment_status: string;
+          is_overdue: boolean;
+          requires_review: boolean;
+        }[];
+      };
+      get_receivables_summary: {
+        Args: { p_company_id: string };
+        Returns: {
+          currency: string;
+          outstanding: number;
+          overdue_amount: number;
+          overdue_count: number;
+          open_count: number;
+        }[];
+      };
+      get_unpriced_jobs: {
+        Args: { p_company_id: string };
+        Returns: {
+          job_id: string;
+          client_id: string;
+          client_name: string;
+          service_type: string;
+          updated_at: string;
+        }[];
       };
       advance_job_status: {
         Args: { p_job_id: string; p_new_status: string };

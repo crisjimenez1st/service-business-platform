@@ -39,7 +39,7 @@ export const SECONDARY_NAV: NavItem[] = [
   { label: t.nav.quotes, path: '/quotes', icon: FileText },
   { label: t.nav.calendar, path: '/calendar', icon: Calendar },
   { label: t.nav.technicians, path: '/technicians', icon: Wrench },
-  { label: t.nav.payments, path: '/payments', icon: Wallet },
+  { label: t.nav.payments, path: '/collections', icon: Wallet },
   { label: t.nav.equipment, path: '/equipment', icon: HardDrive },
   { label: t.nav.warranties, path: '/warranties', icon: ShieldCheck },
   { label: t.nav.reports, path: '/reports', icon: BarChart3 },

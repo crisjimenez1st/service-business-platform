@@ -14,6 +14,7 @@ import QuotePublicPage from './pages/QuotePublicPage';
 import CalendarPage from './pages/CalendarPage';
 import JobsPage from './pages/JobsPage';
 import JobDetailPage from './pages/JobDetailPage';
+import CollectionsPage from './pages/CollectionsPage';
 import ComingSoonPage from './pages/ComingSoonPage';
 import { AuthProvider } from './contexts/AuthContext';
 import { CompanyProvider } from './contexts/CompanyContext';
@@ -63,7 +64,8 @@ export default function App() {
                 <Route path="/more" element={<ComingSoonPage title={t.nav.more} />} />
                 <Route path="/calendar" element={<CalendarPage />} />
                 <Route path="/technicians" element={<ComingSoonPage title={t.nav.technicians} />} />
-                <Route path="/payments" element={<ComingSoonPage title={t.nav.payments} />} />
+                <Route path="/collections" element={<CollectionsPage />} />
+                <Route path="/payments" element={<Navigate to="/collections" replace />} />
                 <Route path="/equipment" element={<ComingSoonPage title={t.nav.equipment} />} />
                 <Route path="/warranties" element={<ComingSoonPage title={t.nav.warranties} />} />
                 <Route path="/reports" element={<ComingSoonPage title={t.nav.reports} />} />

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DollarSign, Clock, Briefcase, TrendingUp, FileText } from 'lucide-react';
+import { DollarSign, Clock, Briefcase, TrendingUp, FileText, Wallet } from 'lucide-react';
 import MetricCard from '../components/dashboard/MetricCard';
 import TodayJobCard from '../components/dashboard/TodayJobCard';
 import OpportunityCard from '../components/dashboard/OpportunityCard';
@@ -17,7 +17,7 @@ import { renderMetric } from '../utils/renderMetric';
 import { isVisibleOpportunity } from '../services/opportunityService';
 import { getAll } from '../services/localDb';
 import { TABLES } from '../services/tables';
-import type { User } from '../types';
+import type { CurrencyCode, User } from '../types';
 import { formatCurrency } from '../utils/currency';
 import { t } from '../i18n/es';
 
@@ -25,6 +25,7 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const { company } = useCurrentCompany();
   const companyId = company?.id;
+  const canViewCollections = company?.role === 'owner' || company?.role === 'office';
   const opportunities = useOpportunityStore((s) => s.opportunities);
   const opportunitiesLoading = useOpportunityStore((s) => s.loading);
   const opportunitiesError = useOpportunityStore((s) => s.error);
@@ -88,7 +89,6 @@ export default function DashboardPage() {
   // Calculados una sola vez -- ver utils/renderMetric.ts: cada uno
   // decide "—" (unavailable) o el valor + insignia "Demo" (mock).
   const monthSalesMetric = renderMetric(metrics.monthSales, formatCurrency);
-  const pendingCollectionMetric = renderMetric(metrics.pendingCollection, formatCurrency);
   const jobsTodayMetric = renderMetric(metrics.jobsToday);
   const quotesPendingResponseMetric = renderMetric(metrics.quotesPendingResponse);
   const quotesAcceptedThisMonthMetric = renderMetric(metrics.quotesAcceptedThisMonth);
@@ -99,18 +99,12 @@ export default function DashboardPage() {
       <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">{t.dashboard.title}</h1>
 
       {/* Métricas principales */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         <MetricCard
           label={t.dashboard.monthSales}
           value={monthSalesMetric.display}
           badge={monthSalesMetric.badge}
           icon={<DollarSign size={18} />}
-        />
-        <MetricCard
-          label={t.dashboard.pendingCollection}
-          value={pendingCollectionMetric.display}
-          badge={pendingCollectionMetric.badge}
-          icon={<Clock size={18} />}
         />
         <MetricCard
           label={t.dashboard.jobsToday}
@@ -125,6 +119,48 @@ export default function DashboardPage() {
           emphasis
         />
       </div>
+
+      {/* Cobros — dinero real por cobrar (get_receivables_summary), una tarjeta por moneda */}
+      {canViewCollections && (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base sm:text-lg font-semibold text-slate-900">
+              {t.dashboard.collectionsSectionTitle}
+            </h2>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/collections')}>
+              {t.dashboard.viewAll}
+            </Button>
+          </div>
+          {metrics.receivables === null ? (
+            <div className="grid grid-cols-2 gap-3">
+              <MetricCard label={t.dashboard.pendingCollection} value={t.dashboard.unavailable} icon={<Wallet size={18} />} />
+              <MetricCard label={t.dashboard.overdueCollection} value={t.dashboard.unavailable} icon={<Clock size={18} />} />
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {(metrics.receivables.length > 0
+                ? metrics.receivables
+                : [{ currency: (company?.currency ?? 'NIO') as CurrencyCode, outstanding: 0, overdueAmount: 0, overdueCount: 0, openCount: 0 }]
+              ).map((r, _i, all) => (
+                <div key={r.currency} className="contents">
+                  <MetricCard
+                    label={all.length > 1 ? `${t.dashboard.pendingCollection} · ${r.currency}` : t.dashboard.pendingCollection}
+                    value={r.openCount === 0 ? t.dashboard.noReceivables : formatCurrency(r.outstanding, r.currency)}
+                    icon={<Wallet size={18} />}
+                    emphasis={r.overdueCount === 0}
+                  />
+                  <MetricCard
+                    label={all.length > 1 ? `${t.dashboard.overdueCollection} · ${r.currency}` : t.dashboard.overdueCollection}
+                    value={formatCurrency(r.overdueAmount, r.currency)}
+                    icon={<Clock size={18} />}
+                    badge={r.overdueCount > 0 ? `${r.overdueCount} ${t.dashboard.overdueCount}` : undefined}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Trabajos de hoy — datos demo, Jobs todavía no migrado a Supabase */}
       <section>

@@ -1,19 +1,22 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Calendar as CalendarIcon, Pencil, MapPin } from 'lucide-react';
 import { Badge, Button, ErrorState, Card } from '../components/ui';
 import JobStatusActions from '../components/jobs/JobStatusActions';
 import CancelJobModal from '../components/jobs/CancelJobModal';
+import JobPaymentsTab from '../components/payments/JobPaymentsTab';
 import AssignTechnicianSheet from '../components/calendar/AssignTechnicianSheet';
 import ScheduleJobSheet from '../components/calendar/ScheduleJobSheet';
 import { useCurrentCompany } from '../contexts/useCurrentCompany';
 import { useClientsById } from '../hooks/useClientsById';
 import { useJobStore } from '../store/jobStore';
 import * as jobService from '../services/jobService';
-import type { Job, CurrencyCode } from '../types';
+import type { Job } from '../types';
 import { JOB_STATUS_LABELS, JOB_STATUS_TONES } from '../utils/jobStatus';
 import { formatTimeInTimezone, formatLongDateInTimezone } from '../utils/timezone';
 import { formatCurrency } from '../utils/currency';
+import { getJobFinancials, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TONES } from '../utils/paymentStatus';
+import { formatCalendarDate } from '../utils/timezone';
 import { t } from '../i18n/es';
 
 type TabKey = 'summary' | 'service' | 'schedule' | 'evidence' | 'materials' | 'payments' | 'history';
@@ -31,13 +34,13 @@ type TabKey = 'summary' | 'service' | 'schedule' | 'evidence' | 'materials' | 'p
 export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { company } = useCurrentCompany();
   const companyId = company?.id;
   const timezone = company?.timezone ?? 'America/Managua';
-  const currency = (company?.currency ?? 'NIO') as CurrencyCode;
 
   const [job, setJob] = useState<Job | null | undefined>(undefined);
-  const [activeTab, setActiveTab] = useState<TabKey>('summary');
+  const [activeTab, setActiveTab] = useState<TabKey>(searchParams.get('tab') === 'payments' ? 'payments' : 'summary');
   const [assignOpen, setAssignOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -95,6 +98,8 @@ export default function JobDetailPage() {
   if (job === null) {
     return <ErrorState message={t.jobDetail.notFound} onRetry={loadJob} />;
   }
+
+  const financials = getJobFinancials(job, timezone);
 
   const tabs: { key: TabKey; label: string }[] = [
     { key: 'summary', label: t.jobDetail.tabSummary },
@@ -178,19 +183,33 @@ export default function JobDetailPage() {
               <p className="text-sm text-slate-600 mt-1">{technicianName ?? t.calendar.unassigned}</p>
             </Card>
           )}
-          {(job.total !== undefined || job.paidAmount !== undefined) && (
+          {financials.hasTotal && (
             <Card>
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">{t.jobDetail.total}</span>
-                <span className="font-medium text-slate-900">
-                  {job.total !== undefined ? formatCurrency(job.total, currency) : '—'}
-                </span>
+                <span className="font-medium text-slate-900">{formatCurrency(financials.total, job.currency)}</span>
               </div>
               <div className="flex justify-between text-sm mt-1">
                 <span className="text-slate-500">{t.jobDetail.paidAmount}</span>
-                <span className="font-medium text-slate-900">
-                  {job.paidAmount !== undefined ? formatCurrency(job.paidAmount, currency) : '—'}
-                </span>
+                <span className="font-medium text-slate-900">{formatCurrency(financials.paidAmount, job.currency)}</span>
+              </div>
+              <div className="flex justify-between text-sm mt-1">
+                <span className="text-slate-500">{t.jobDetail.balance}</span>
+                <span className="font-medium text-slate-900">{formatCurrency(financials.balance, job.currency)}</span>
+              </div>
+              {job.dueDate && (
+                <div className="flex justify-between text-sm mt-1">
+                  <span className="text-slate-500">{t.jobDetail.dueDate}</span>
+                  <span className={financials.isOverdue ? 'font-medium text-red-700' : 'text-slate-700'}>
+                    {formatCalendarDate(job.dueDate)}
+                  </span>
+                </div>
+              )}
+              <div className="flex flex-wrap gap-2 mt-3">
+                <Badge tone={PAYMENT_STATUS_TONES[financials.paymentStatus]}>
+                  {PAYMENT_STATUS_LABELS[financials.paymentStatus]}
+                </Badge>
+                {financials.isOverdue && <Badge tone="danger">{t.payments.overdueBadge}</Badge>}
               </div>
             </Card>
           )}
@@ -250,7 +269,9 @@ export default function JobDetailPage() {
         </div>
       )}
 
-      {(activeTab === 'evidence' || activeTab === 'materials' || activeTab === 'payments' || activeTab === 'history') && (
+      {activeTab === 'payments' && <JobPaymentsTab job={job} timezone={timezone} onJobChange={setJob} />}
+
+      {(activeTab === 'evidence' || activeTab === 'materials' || activeTab === 'history') && (
         <Card>
           <p className="text-sm text-slate-500 text-center py-6">{t.jobDetail.comingSoon}</p>
         </Card>

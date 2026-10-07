@@ -1,4 +1,4 @@
-import type { Job, JobStatus, MyAssignedJob, CompanyTechnician } from '../../types';
+import type { Job, JobStatus, MyAssignedJob, CompanyTechnician, CurrencyCode } from '../../types';
 import type { Database } from '../../types/database.types';
 
 type JobRow = Database['public']['Tables']['jobs']['Row'];
@@ -30,6 +30,8 @@ export function jobRowToDomain(row: JobRow): Job {
     mapsUrl: row.maps_url ?? undefined,
     total: row.total ?? undefined,
     paidAmount: row.paid_amount ?? undefined,
+    currency: row.currency as CurrencyCode,
+    dueDate: row.due_date ?? undefined,
     cancellationReason: row.cancellation_reason ?? undefined,
     cancellationCategory: row.cancellation_category ?? undefined,
     cancelledAt: row.cancelled_at ?? undefined,
