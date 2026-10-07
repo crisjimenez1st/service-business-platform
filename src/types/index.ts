@@ -5,3 +5,4 @@ export * from './equipment';
 export * from './opportunity';
 export * from './notification';
 export * from './followup';
+export * from './agenda';

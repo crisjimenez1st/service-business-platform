@@ -63,3 +63,21 @@ export function resolveFollowupDate(choice: FollowupChoice, customDate: string, 
       return null;
   }
 }
+
+/** Opción de chips equivalente a "N meses" (sugerida por una regla): chip fijo si existe, si no fecha libre. */
+export function choiceForMonths(months: number, todayKey: string): { choice: FollowupChoice; customDate: string } {
+  switch (months) {
+    case 1:
+      return { choice: '1m', customDate: '' };
+    case 2:
+      return { choice: '2m', customDate: '' };
+    case 3:
+      return { choice: '3m', customDate: '' };
+    case 6:
+      return { choice: '6m', customDate: '' };
+    case 12:
+      return { choice: '1y', customDate: '' };
+    default:
+      return { choice: 'custom', customDate: addMonthsToDateKey(todayKey, months) };
+  }
+}

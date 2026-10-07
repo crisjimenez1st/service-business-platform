@@ -11,6 +11,7 @@ import QuotesPage from './pages/QuotesPage';
 import QuoteFormPage from './pages/QuoteFormPage';
 import QuoteDetailPage from './pages/QuoteDetailPage';
 import QuotePublicPage from './pages/QuotePublicPage';
+import AppointmentConfirmPage from './pages/AppointmentConfirmPage';
 import CalendarPage from './pages/CalendarPage';
 import JobsPage from './pages/JobsPage';
 import JobDetailPage from './pages/JobDetailPage';
@@ -52,6 +53,7 @@ export default function App() {
               URL, validado en el backend vía get_public_quote_by_token.
             */}
             <Route path="/q/:publicToken" element={<QuotePublicPage />} />
+            <Route path="/c/:token" element={<AppointmentConfirmPage />} />
 
             <Route element={<ProtectedRoute />}>
               <Route element={<AppLayout />}>

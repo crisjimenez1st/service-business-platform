@@ -390,6 +390,61 @@ export interface Database {
         Relationships: [];
       };
 
+      service_followup_rules: {
+        Row: {
+          id: string;
+          company_id: string;
+          service_name: string;
+          service_key: string;
+          months: number;
+          reason: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          service_name: string;
+          months: number;
+          reason?: string | null;
+        };
+        Update: { service_name?: string; months?: number; reason?: string | null };
+        Relationships: [];
+      };
+
+      /** Solo lectura desde el cliente: escribir pasa por add_to_waitlist / resolve_waitlist_entry. */
+      waitlist_entries: {
+        Row: {
+          id: string;
+          company_id: string;
+          client_id: string;
+          note: string | null;
+          service: string | null;
+          status: string;
+          created_at: string;
+          resolved_at: string | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+
+      /** Solo lectura (owner/office): escribir pasa por las RPCs de recordatorio de cita. */
+      appointment_responses: {
+        Row: {
+          job_id: string;
+          company_id: string;
+          token: string;
+          response: string | null;
+          response_at: string | null;
+          response_source: string | null;
+          reminded_at: string | null;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+
       payments: {
         Row: {
           id: string;
@@ -540,6 +595,43 @@ export interface Database {
       };
       resolve_inactive_client: {
         Args: { p_company_id: string; p_client_id: string; p_action: string; p_date?: string | null };
+        Returns: string;
+      };
+      add_to_waitlist: {
+        Args: { p_company_id: string; p_client_id: string; p_note?: string | null; p_service?: string | null };
+        Returns: string;
+      };
+      resolve_waitlist_entry: {
+        Args: { p_entry_id: string; p_status: string };
+        Returns: undefined;
+      };
+      prepare_appointment_link: {
+        Args: { p_job_id: string };
+        Returns: string;
+      };
+      mark_appointment_reminded: {
+        Args: { p_job_id: string };
+        Returns: undefined;
+      };
+      set_appointment_response: {
+        Args: { p_job_id: string; p_response: string | null };
+        Returns: undefined;
+      };
+      get_public_appointment: {
+        Args: { p_token: string };
+        Returns: {
+          company_name: string;
+          company_logo_url: string | null;
+          company_phone: string | null;
+          client_first_name: string;
+          scheduled_start_at: string;
+          timezone: string;
+          response: string | null;
+          can_respond: boolean;
+        }[];
+      };
+      respond_public_appointment: {
+        Args: { p_token: string; p_response: string };
         Returns: string;
       };
       create_client_with_followup: {

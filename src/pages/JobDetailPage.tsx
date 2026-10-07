@@ -1,6 +1,8 @@
 import ScheduleFollowupSheet from '../components/followups/ScheduleFollowupSheet';
 import { createFollowup } from '../services/followupService';
 import { useTerms } from '../hooks/useTerms';
+import { useServiceRulesStore } from '../store/serviceRulesStore';
+import { findRuleForService } from '../services/serviceRulesService';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Calendar as CalendarIcon, Pencil, MapPin } from 'lucide-react';
@@ -10,6 +12,8 @@ import CancelJobModal from '../components/jobs/CancelJobModal';
 import JobPaymentsTab from '../components/payments/JobPaymentsTab';
 import AssignTechnicianSheet from '../components/calendar/AssignTechnicianSheet';
 import ScheduleJobSheet from '../components/calendar/ScheduleJobSheet';
+import { getAppointmentResponses } from '../services/appointmentService';
+import type { AppointmentResponse } from '../types';
 import { useCurrentCompany } from '../contexts/useCurrentCompany';
 import { useClientsById } from '../hooks/useClientsById';
 import { useJobStore } from '../store/jobStore';
@@ -49,6 +53,8 @@ export default function JobDetailPage() {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [advancing, setAdvancing] = useState(false);
   const [followupOpen, setFollowupOpen] = useState(false);
+  const [freedSlot, setFreedSlot] = useState<string | null>(null);
+  const [apptResponse, setApptResponse] = useState<AppointmentResponse | null>(null);
 
   const { clientsById } = useClientsById();
   const technicians = useJobStore((s) => s.technicians);
@@ -57,6 +63,8 @@ export default function JobDetailPage() {
   const scheduleJobAction = useJobStore((s) => s.schedule);
   const advanceStatus = useJobStore((s) => s.advanceStatus);
   const terms = useTerms();
+  const serviceRules = useServiceRulesStore((s) => s.rules);
+  const loadServiceRules = useServiceRulesStore((s) => s.load);
   const cancel = useJobStore((s) => s.cancel);
 
   async function loadJob() {
@@ -69,6 +77,24 @@ export default function JobDetailPage() {
     loadJob();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId, id]);
+
+  useEffect(() => {
+    const canFollowUp = company?.role === 'owner' || company?.role === 'office';
+    if (companyId && canFollowUp && company?.businessType !== 'technical_services') loadServiceRules(companyId);
+  }, [companyId, company?.role, company?.businessType, loadServiceRules]);
+
+  const scheduledStartAt = job?.scheduledStartAt;
+  useEffect(() => {
+    if (!companyId || !id || !scheduledStartAt) return;
+    let cancelled = false;
+    (async () => {
+      const r = await getAppointmentResponses(companyId, [id]);
+      if (!cancelled) setApptResponse(r.error ? null : (r.data[0] ?? null));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [companyId, id, scheduledStartAt]);
 
   useEffect(() => {
     if (companyId) loadTechnicians(companyId);
@@ -98,8 +124,16 @@ export default function JobDetailPage() {
 
   async function handleCancel(reason: string, category?: string) {
     if (!job) return false;
+    const slot = job.scheduledStartAt;
     const updated = await cancel(job.id, reason, category);
-    if (updated) setJob(updated);
+    if (updated) {
+      setJob(updated);
+      // Se liberó un espacio futuro: ofrecer avisar a la lista de espera.
+      const canOffer = company?.role === 'owner' || company?.role === 'office';
+      if (slot && new Date(slot).getTime() > Date.now() && canOffer && company?.businessType !== 'technical_services') {
+        setFreedSlot(slot);
+      }
+    }
     return updated !== null;
   }
 
@@ -144,6 +178,20 @@ export default function JobDetailPage() {
       {job.status !== 'completed' && job.status !== 'cancelled' && (
         <Card>
           <JobStatusActions job={job} onAdvance={handleAdvance} onCancel={() => setCancelOpen(true)} advancing={advancing} />
+        </Card>
+      )}
+
+      {job.status === 'cancelled' && freedSlot && (
+        <Card className="bg-brand-50 border-brand-200">
+          <p className="text-sm font-medium text-slate-900">Se liberó un espacio</p>
+          <p className="text-sm text-slate-600 mt-1">¿Quieres avisar a quienes están en la lista de espera?</p>
+          <Button
+            size="sm"
+            className="mt-3"
+            onClick={() => navigate(`/followups?tab=waitlist&slot=${encodeURIComponent(freedSlot)}`)}
+          >
+            Avisar a la lista de espera
+          </Button>
         </Card>
       )}
 
@@ -193,6 +241,15 @@ export default function JobDetailPage() {
                 {formatLongDateInTimezone(job.scheduledStartAt, timezone)} · {formatTimeInTimezone(job.scheduledStartAt, timezone)}
               </p>
               <p className="text-sm text-slate-600 mt-1">{technicianName ?? t.calendar.unassigned}</p>
+              {apptResponse?.response && (
+                <div className="mt-2">
+                  <Badge tone={apptResponse.response === 'confirmed' ? 'success' : 'warning'}>
+                    {apptResponse.response === 'confirmed'
+                      ? apptResponse.responseSource === 'patient' ? 'Confirmó su cita' : 'Cita confirmada'
+                      : apptResponse.responseSource === 'patient' ? 'Avisó que no podrá asistir' : 'No podrá asistir'}
+                  </Badge>
+                </div>
+              )}
             </Card>
           )}
           {financials.hasTotal && (
@@ -323,6 +380,10 @@ export default function JobDetailPage() {
           open
           question={terms.whenReturn}
           timezone={timezone}
+          suggestion={(() => {
+            const rule = findRuleForService(serviceRules, job.serviceType);
+            return rule ? { serviceName: rule.serviceName, months: rule.months, reason: rule.reason } : undefined;
+          })()}
           onClose={() => setFollowupOpen(false)}
           onSave={async (f) => {
             if (!companyId) return false;

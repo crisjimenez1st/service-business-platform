@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button, Card } from '../components/ui';
 import BusinessTypePicker from '../components/settings/BusinessTypePicker';
 import CurrencyPicker from '../components/settings/CurrencyPicker';
+import ServiceRulesCard from '../components/settings/ServiceRulesCard';
 import { useCurrentCompany } from '../contexts/useCurrentCompany';
 import { setBusinessType, setCompanyCurrency } from '../services/companySetupService';
 import type { BusinessType, CurrencyCode } from '../types';
@@ -107,6 +108,13 @@ export default function SettingsPage() {
           </Button>
         )}
       </Card>
+
+      {(isOwner || company.role === 'office') && company.businessType !== 'technical_services' && (
+        <section className="space-y-2">
+          <h2 className="text-base font-semibold text-slate-900">Reglas de regreso</h2>
+          <ServiceRulesCard />
+        </section>
+      )}
     </div>
   );
 }

@@ -1,46 +1,72 @@
-import { MessageCircle, Phone, Check, CalendarClock } from 'lucide-react';
+import { MessageCircle, Phone, Check, CalendarClock, X, Users } from 'lucide-react';
 import { Badge, Button, Card } from '../ui';
+
+export type TomorrowStatus = 'pending' | 'reminded' | 'confirmed' | 'declined';
 
 interface TomorrowCardProps {
   clientName: string;
   phone: string;
   timeText: string;
   serviceType: string;
-  sent: boolean;
-  confirmed: boolean;
+  status: TomorrowStatus;
+  /** Quién marcó la respuesta: el paciente desde su enlace o la clínica a mano. */
+  source?: 'patient' | 'staff';
+  busy: boolean;
   onWhatsApp: () => void;
   onConfirmed: () => void;
+  onDeclined: () => void;
+  onClear: () => void;
   onReschedule: () => void;
+  onOfferSlot: () => void;
 }
 
-/** Una cita de mañana: WhatsApp de un toque y, después, Confirmó / Reagendar. */
+/**
+ * Una cita de mañana. Es un RECORDATORIO: enviarlo es lo principal y
+ * que el paciente no responda no es un problema. La respuesta (por el
+ * enlace del paciente o marcada a mano) es un extra.
+ */
 export default function TomorrowCard({
   clientName,
   phone,
   timeText,
   serviceType,
-  sent,
-  confirmed,
+  status,
+  source,
+  busy,
   onWhatsApp,
   onConfirmed,
+  onDeclined,
+  onClear,
   onReschedule,
+  onOfferSlot,
 }: TomorrowCardProps) {
+  const badge =
+    status === 'confirmed' ? (
+      <Badge tone="success">Confirmó</Badge>
+    ) : status === 'declined' ? (
+      <Badge tone="warning">No podrá asistir</Badge>
+    ) : status === 'reminded' ? (
+      <Badge tone="info">Recordado</Badge>
+    ) : (
+      <Badge tone="neutral">{timeText}</Badge>
+    );
+
   return (
     <Card className="space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-semibold text-slate-900 truncate">{clientName}</p>
-          <p className="text-sm text-slate-600 mt-0.5">{serviceType}</p>
+          <p className="text-sm text-slate-600 mt-0.5">
+            {serviceType} · {timeText}
+          </p>
         </div>
-        {confirmed ? <Badge tone="success">Confirmada</Badge> : <Badge tone="info">{timeText}</Badge>}
+        {badge}
       </div>
 
-      {confirmed ? (
-        <p className="text-sm text-slate-500">Mañana a las {timeText}.</p>
-      ) : !sent ? (
+      {status === 'pending' && (
         <div className="flex gap-2">
-          <Button variant="success" fullWidth icon={<MessageCircle size={18} />} onClick={onWhatsApp}>
-            Confirmar por WhatsApp
+          <Button variant="success" fullWidth icon={<MessageCircle size={18} />} onClick={onWhatsApp} disabled={busy}>
+            Recordar por WhatsApp
           </Button>
           <a
             href={`tel:${phone}`}
@@ -50,19 +76,53 @@ export default function TomorrowCard({
             <Phone size={18} />
           </a>
         </div>
-      ) : (
+      )}
+
+      {status === 'reminded' && (
         <div className="space-y-2">
-          <p className="text-sm text-slate-600">¿Qué respondió?</p>
+          <p className="text-sm text-slate-500">
+            Recordatorio enviado. Si no responde, no pasa nada: puedes marcar lo que te diga.
+          </p>
           <div className="grid grid-cols-2 gap-2">
-            <Button size="sm" variant="success" icon={<Check size={16} />} onClick={onConfirmed}>
+            <Button size="sm" variant="success" icon={<Check size={16} />} onClick={onConfirmed} disabled={busy}>
               Confirmó
             </Button>
-            <Button size="sm" variant="secondary" icon={<CalendarClock size={16} />} onClick={onReschedule}>
-              Reagendar
+            <Button size="sm" variant="secondary" icon={<X size={16} />} onClick={onDeclined} disabled={busy}>
+              No podrá
             </Button>
           </div>
           <button type="button" onClick={onWhatsApp} className="text-xs text-slate-500 hover:text-slate-700 underline min-h-8">
-            Volver a enviar mensaje
+            Volver a enviar recordatorio
+          </button>
+        </div>
+      )}
+
+      {status === 'confirmed' && (
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-sm text-slate-500">
+            {source === 'patient' ? 'Confirmó desde su enlace.' : 'Marcada como confirmada.'}
+          </p>
+          <button type="button" onClick={onClear} disabled={busy} className="text-xs text-slate-500 hover:text-slate-700 underline min-h-8">
+            Corregir
+          </button>
+        </div>
+      )}
+
+      {status === 'declined' && (
+        <div className="space-y-2">
+          <p className="text-sm text-slate-600">
+            {source === 'patient' ? 'Avisó desde su enlace que no podrá asistir.' : 'Marcada como "no podrá asistir".'}
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <Button size="sm" variant="secondary" icon={<CalendarClock size={16} />} onClick={onReschedule}>
+              Reagendar
+            </Button>
+            <Button size="sm" variant="secondary" icon={<Users size={16} />} onClick={onOfferSlot}>
+              Ofrecer a lista de espera
+            </Button>
+          </div>
+          <button type="button" onClick={onClear} disabled={busy} className="text-xs text-slate-500 hover:text-slate-700 underline min-h-8">
+            Corregir
           </button>
         </div>
       )}

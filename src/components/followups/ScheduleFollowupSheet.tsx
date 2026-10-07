@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Sheet, Button } from '../ui';
 import FollowupWhenPicker from '../clients/FollowupWhenPicker';
-import { resolveFollowupDate, type FollowupChoice } from '../../utils/followupDates';
+import { resolveFollowupDate, choiceForMonths, type FollowupChoice } from '../../utils/followupDates';
 import { getTodayKeyInTimezone } from '../../utils/timezone';
 
 interface ScheduleFollowupSheetProps {
@@ -10,14 +10,19 @@ interface ScheduleFollowupSheetProps {
   timezone: string;
   onClose: () => void;
   /** Devuelve true si se guardó el aviso. */
+  /** Regla del servicio de la cita: deja la fecha y el motivo ya elegidos. */
+  suggestion?: { serviceName: string; months: number; reason: string };
   onSave: (followup: { dueDate: string; reason?: string }) => Promise<boolean>;
 }
 
 /** Se muestra al terminar una cita: "¿Cuándo debe volver?". Omitir es válido. Se monta solo cuando hace falta, así cada vez parte limpio. */
-export default function ScheduleFollowupSheet({ open, question, timezone, onClose, onSave }: ScheduleFollowupSheetProps) {
-  const [choice, setChoice] = useState<FollowupChoice>('none');
-  const [customDate, setCustomDate] = useState('');
-  const [reason, setReason] = useState('');
+export default function ScheduleFollowupSheet({ open, question, timezone, suggestion, onClose, onSave }: ScheduleFollowupSheetProps) {
+  const initial = suggestion
+    ? choiceForMonths(suggestion.months, getTodayKeyInTimezone(timezone))
+    : { choice: 'none' as FollowupChoice, customDate: '' };
+  const [choice, setChoice] = useState<FollowupChoice>(initial.choice);
+  const [customDate, setCustomDate] = useState(initial.customDate);
+  const [reason, setReason] = useState(suggestion?.reason ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,6 +58,11 @@ export default function ScheduleFollowupSheet({ open, question, timezone, onClos
         </div>
       }
     >
+      {suggestion && (
+        <p className="mb-3 text-sm text-brand-700 bg-brand-50 rounded-lg px-3 py-2">
+          Sugerido por tu regla: {suggestion.serviceName} vuelve en {suggestion.months === 1 ? '1 mes' : `${suggestion.months} meses`}. Puedes cambiarlo.
+        </p>
+      )}
       <FollowupWhenPicker
         question={question}
         choice={choice}

@@ -135,14 +135,34 @@ export function inactiveMessage(type: BusinessType | undefined, clientName: stri
   }
 }
 
-/** Mensaje para confirmar una cita de mañana. Genérico: sin tratamientos ni datos médicos. */
+/**
+ * Recordatorio de la cita de mañana. Es un recordatorio: el enlace para
+ * confirmar es opcional. Genérico: sin tratamientos ni datos médicos.
+ */
 export function appointmentConfirmMessage(
   type: BusinessType | undefined,
   clientName: string,
   companyName: string,
-  timeText: string
+  timeText: string,
+  confirmLink?: string
 ): string {
   const firstName = clientName.trim().split(/\s+/)[0] || clientName;
   const what = type === 'technical_services' ? 'visita' : 'cita';
-  return `Hola ${firstName}, te escribimos de ${companyName}. Te recordamos tu ${what} de mañana a las ${timeText}. ¿Nos confirmas que podrás asistir?`;
+  const base = `Hola ${firstName}, te escribimos de ${companyName}. Te recordamos tu ${what} de mañana a las ${timeText}. ¡Te esperamos!`;
+  return confirmLink
+    ? `${base} Si quieres confirmarla o avisarnos que no podrás, entra aquí: ${confirmLink}`
+    : base;
+}
+
+/** Mensaje para quien está en la lista de espera cuando se libera un espacio. `slotText` ej. "el jueves 8 de octubre a las 3:00 p. m." (vacío = genérico). */
+export function waitlistMessage(
+  type: BusinessType | undefined,
+  clientName: string,
+  companyName: string,
+  slotText: string
+): string {
+  const firstName = clientName.trim().split(/\s+/)[0] || clientName;
+  const what = type === 'technical_services' ? 'visita' : 'cita';
+  const when = slotText ? ` ${slotText}` : '';
+  return `Hola ${firstName}, te escribimos de ${companyName}. Se liberó un espacio para una ${what}${when}. ¿Te interesa tomarlo?`;
 }

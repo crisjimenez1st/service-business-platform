@@ -1,26 +1,30 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { BellRing } from 'lucide-react';
-import { EmptyState, ErrorState } from '../components/ui';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { BellRing, Plus } from 'lucide-react';
+import { Button, EmptyState, ErrorState } from '../components/ui';
 import FilterChips from '../components/clients/FilterChips';
 import FollowupCard from '../components/followups/FollowupCard';
 import TomorrowCard from '../components/followups/TomorrowCard';
+import WaitlistCard from '../components/followups/WaitlistCard';
+import AddToWaitlistSheet from '../components/followups/AddToWaitlistSheet';
 import WhatsAppFollowupSheet from '../components/followups/WhatsAppFollowupSheet';
 import PostponeModal from '../components/opportunities/PostponeModal';
 import DiscardModal from '../components/opportunities/DiscardModal';
 import { useCurrentCompany } from '../contexts/useCurrentCompany';
 import { useFollowupStore } from '../store/followupStore';
 import { useTomorrowStore } from '../store/tomorrowStore';
+import { useWaitlistStore } from '../store/waitlistStore';
 import { useClientsById } from '../hooks/useClientsById';
+import { buildAppointmentLink } from '../services/appointmentService';
 import { useTerms } from '../hooks/useTerms';
-import { followupMessage, inactiveMessage, appointmentConfirmMessage } from '../i18n/businessTerms';
+import { followupMessage, inactiveMessage, appointmentConfirmMessage, waitlistMessage } from '../i18n/businessTerms';
 import { buildWhatsAppLink, toWhatsAppNumber } from '../utils/whatsapp';
 import { addDaysToDateKey } from '../utils/followupDates';
-import { getTodayKeyInTimezone, formatTimeInTimezone } from '../utils/timezone';
+import { getTodayKeyInTimezone, formatTimeInTimezone, formatLongDateInTimezone } from '../utils/timezone';
 import { t } from '../i18n/es';
 import type { FollowupDue, Job } from '../types';
 
-type View = 'today' | 'tomorrow' | 'inactive';
+type View = 'today' | 'tomorrow' | 'inactive' | 'waitlist';
 
 /** "Hace 8 meses" / "Hace 45 días", a partir de los días desde la última visita. */
 function sinceLabel(days: number): string {
@@ -46,7 +50,12 @@ export default function FollowupsPage() {
   const timezone = company?.timezone ?? 'America/Managua';
   const terms = useTerms();
   const navigate = useNavigate();
-  const { clientsById } = useClientsById();
+  const { clients, clientsById } = useClientsById();
+  const [searchParams] = useSearchParams();
+  const slotParam = searchParams.get('slot');
+  const slotText = slotParam
+    ? `el ${formatLongDateInTimezone(slotParam, timezone)} a las ${formatTimeInTimezone(slotParam, timezone)}`
+    : '';
 
   const items = useFollowupStore((s) => s.items);
   const inactive = useFollowupStore((s) => s.inactive);
@@ -64,16 +73,50 @@ export default function FollowupsPage() {
   const resolveInactive = useFollowupStore((s) => s.resolveInactive);
 
   const tomorrowJobs = useTomorrowStore((s) => s.jobs);
-  const tomorrowSent = useTomorrowStore((s) => s.sentIds);
-  const tomorrowConfirmed = useTomorrowStore((s) => s.confirmedIds);
+  const tomorrowResponses = useTomorrowStore((s) => s.responses);
   const tomorrowLoading = useTomorrowStore((s) => s.loading);
   const tomorrowError = useTomorrowStore((s) => s.error);
   const loadTomorrow = useTomorrowStore((s) => s.load);
-  const markTomorrowSent = useTomorrowStore((s) => s.markSent);
-  const markTomorrowConfirmed = useTomorrowStore((s) => s.markConfirmed);
-  const [tomorrowFor, setTomorrowFor] = useState<Job | null>(null);
+  const prepareTomorrowLink = useTomorrowStore((s) => s.prepareLink);
+  const markTomorrowReminded = useTomorrowStore((s) => s.markReminded);
+  const setTomorrowResponse = useTomorrowStore((s) => s.setResponse);
+  const [tomorrowFor, setTomorrowFor] = useState<{ job: Job; link: string } | null>(null);
+  const [tomorrowBusyId, setTomorrowBusyId] = useState<string | null>(null);
+  const [tomorrowActionError, setTomorrowActionError] = useState<string | null>(null);
 
-  const [view, setView] = useState<View>('today');
+  async function startReminder(job: Job) {
+    setTomorrowActionError(null);
+    setTomorrowBusyId(job.id);
+    const { token, error: linkError } = await prepareTomorrowLink(job.id);
+    setTomorrowBusyId(null);
+    if (linkError || !token) {
+      setTomorrowActionError(linkError?.message ?? 'No pudimos preparar el recordatorio.');
+      return;
+    }
+    setTomorrowFor({ job, link: buildAppointmentLink(token) });
+  }
+
+  async function respond(job: Job, response: 'confirmed' | 'declined' | null) {
+    setTomorrowActionError(null);
+    setTomorrowBusyId(job.id);
+    const err = await setTomorrowResponse(job.id, response);
+    setTomorrowBusyId(null);
+    if (err) setTomorrowActionError(err.message);
+  }
+
+  const waitlist = useWaitlistStore((s) => s.entries);
+  const waitlistSent = useWaitlistStore((s) => s.sentIds);
+  const waitlistLoading = useWaitlistStore((s) => s.loading);
+  const waitlistError = useWaitlistStore((s) => s.error);
+  const loadWaitlist = useWaitlistStore((s) => s.load);
+  const addToWaitlist = useWaitlistStore((s) => s.add);
+  const resolveWaitlist = useWaitlistStore((s) => s.resolve);
+  const markWaitlistSent = useWaitlistStore((s) => s.markSent);
+  const [waitlistFor, setWaitlistFor] = useState<string | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
+  const [waitlistActionError, setWaitlistActionError] = useState<string | null>(null);
+
+  const [view, setView] = useState<View>(searchParams.get('tab') === 'waitlist' ? 'waitlist' : 'today');
   const [whatsappFor, setWhatsappFor] = useState<FollowupDue | null>(null);
   const [postponeFor, setPostponeFor] = useState<FollowupDue | null>(null);
   const [discardFor, setDiscardFor] = useState<FollowupDue | null>(null);
@@ -84,8 +127,9 @@ export default function FollowupsPage() {
       load(companyId);
       loadInactive(companyId);
       loadTomorrow(companyId, timezone);
+      loadWaitlist(companyId);
     }
-  }, [companyId, timezone, load, loadInactive, loadTomorrow]);
+  }, [companyId, timezone, load, loadInactive, loadTomorrow, loadWaitlist]);
 
   // Los inactivos se muestran con la misma tarjeta: opportunityId = id del cliente.
   const inactiveItems = useMemo<FollowupDue[]>(
@@ -138,6 +182,7 @@ export default function FollowupsPage() {
   const filterOptions = [
     { value: 'today' as View, label: `Hoy${items.length > 0 ? ` (${items.length})` : ''}` },
     { value: 'tomorrow' as View, label: `Citas de mañana${tomorrowJobs.length > 0 ? ` (${tomorrowJobs.length})` : ''}` },
+    { value: 'waitlist' as View, label: `Lista de espera${waitlist.length > 0 ? ` (${waitlist.length})` : ''}` },
     { value: 'inactive' as View, label: `Hace tiempo que no vienen${inactive.length > 0 ? ` (${inactive.length})` : ''}` },
   ];
 
@@ -145,7 +190,7 @@ export default function FollowupsPage() {
     <div className="space-y-4 pb-4">
       <div>
         <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">{terms.followupsToday}</h1>
-        {view !== 'tomorrow' && !listLoading && !listError && list.length > 0 && (
+        {view !== 'tomorrow' && view !== 'waitlist' && !listLoading && !listError && list.length > 0 && (
           <p className="text-sm text-slate-500 mt-0.5">
             {list.length === 1 ? '1 persona para avisar' : `${list.length} personas para avisar`}
           </p>
@@ -154,7 +199,55 @@ export default function FollowupsPage() {
 
       <FilterChips options={filterOptions} active={view} onChange={setView} />
 
-      {view === 'tomorrow' ? (
+      {view === 'waitlist' ? (
+        <div className="space-y-3">
+          <Button size="sm" variant="secondary" icon={<Plus size={16} />} onClick={() => setAddOpen(true)}>
+            Agregar a la lista de espera
+          </Button>
+          {waitlistActionError && (
+            <p role="alert" className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
+              {waitlistActionError}
+            </p>
+          )}
+          {slotText && (
+            <p className="text-sm text-brand-700 bg-brand-50 rounded-lg px-3 py-2">
+              Se liberó un espacio {slotText}. Avisa a quien esté esperando.
+            </p>
+          )}
+          {waitlistError ? (
+            <ErrorState message={waitlistError.message} onRetry={() => companyId && loadWaitlist(companyId)} />
+          ) : waitlistLoading && waitlist.length === 0 ? (
+            <p className="text-center text-sm text-slate-500 py-12">{t.common.loading}</p>
+          ) : waitlist.length === 0 ? (
+            <EmptyState
+              icon={<BellRing size={36} />}
+              title="Nadie en lista de espera"
+              description="Agrega a quien quiera una cita antes. Cuando se libere un espacio, lo avisas con un toque."
+            />
+          ) : (
+            <div className="grid sm:grid-cols-2 gap-3">
+              {waitlist.map((entry) => {
+                const client = clientsById[entry.clientId];
+                return (
+                  <WaitlistCard
+                    key={entry.id}
+                    name={client?.name ?? '—'}
+                    phone={client?.whatsapp || client?.phone || ''}
+                    note={entry.note}
+                    service={entry.service}
+                    createdAt={entry.createdAt}
+                    sent={waitlistSent.includes(entry.id)}
+                    busy={false}
+                    onWhatsApp={() => client && setWaitlistFor(entry.id)}
+                    onBooked={async () => setWaitlistActionError((await resolveWaitlist(entry.id, 'booked'))?.message ?? null)}
+                    onRemove={async () => setWaitlistActionError((await resolveWaitlist(entry.id, 'removed'))?.message ?? null)}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ) : view === 'tomorrow' ? (
         tomorrowError ? (
           <ErrorState message={tomorrowError.message} onRetry={() => companyId && loadTomorrow(companyId, timezone)} />
         ) : tomorrowLoading && tomorrowJobs.length === 0 ? (
@@ -166,9 +259,17 @@ export default function FollowupsPage() {
             description="Cuando agendes citas para mañana, aparecerán aquí para confirmarlas."
           />
         ) : (
+          <div className="space-y-3">
+            {tomorrowActionError && (
+              <p role="alert" className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
+                {tomorrowActionError}
+              </p>
+            )}
           <div className="grid sm:grid-cols-2 gap-3">
             {tomorrowJobs.map((job) => {
               const client = clientsById[job.clientId];
+              const resp = tomorrowResponses[job.id];
+              const status = resp?.response ?? (resp?.remindedAt ? 'reminded' : 'pending');
               return (
                 <TomorrowCard
                   key={job.id}
@@ -176,14 +277,21 @@ export default function FollowupsPage() {
                   phone={client?.whatsapp || client?.phone || ''}
                   timeText={job.scheduledStartAt ? formatTimeInTimezone(job.scheduledStartAt, timezone) : ''}
                   serviceType={job.serviceType}
-                  sent={tomorrowSent.includes(job.id)}
-                  confirmed={tomorrowConfirmed.includes(job.id)}
-                  onWhatsApp={() => client && setTomorrowFor(job)}
-                  onConfirmed={() => markTomorrowConfirmed(job.id)}
+                  status={status}
+                  source={resp?.responseSource}
+                  busy={tomorrowBusyId === job.id}
+                  onWhatsApp={() => client && startReminder(job)}
+                  onConfirmed={() => respond(job, 'confirmed')}
+                  onDeclined={() => respond(job, 'declined')}
+                  onClear={() => respond(job, null)}
                   onReschedule={() => navigate(`/jobs/${job.id}`)}
+                  onOfferSlot={() =>
+                    navigate(`/followups?tab=waitlist&slot=${encodeURIComponent(job.scheduledStartAt ?? '')}`)
+                  }
                 />
               );
             })}
+          </div>
           </div>
         )
       ) : listError ? (
@@ -224,23 +332,57 @@ export default function FollowupsPage() {
         </div>
       )}
 
-      {tomorrowFor && clientsById[tomorrowFor.clientId] && (
-        <WhatsAppFollowupSheet
-          key={tomorrowFor.id}
+      {addOpen && (
+        <AddToWaitlistSheet
           open
-          clientName={clientsById[tomorrowFor.clientId].name}
+          clients={clients}
+          excludeClientIds={waitlist.map((w) => w.clientId)}
+          clientLabel={terms.client}
+          onClose={() => setAddOpen(false)}
+          onSave={async (input) => (await addToWaitlist(input))?.message ?? null}
+        />
+      )}
+
+      {waitlistFor && (() => {
+        const entry = waitlist.find((w) => w.id === waitlistFor);
+        const client = entry ? clientsById[entry.clientId] : undefined;
+        if (!entry || !client) return null;
+        return (
+          <WhatsAppFollowupSheet
+            key={entry.id}
+            open
+            clientName={client.name}
+            initialMessage={waitlistMessage(company?.businessType, client.name, company?.name ?? '', slotText)}
+            onClose={() => setWaitlistFor(null)}
+            onSend={(message) => {
+              const number = toWhatsAppNumber(client.whatsapp || client.phone, timezone);
+              window.open(buildWhatsAppLink(number, message), '_blank', 'noopener,noreferrer');
+              markWaitlistSent(entry.id);
+              setWaitlistFor(null);
+            }}
+          />
+        );
+      })()}
+
+      {tomorrowFor && clientsById[tomorrowFor.job.clientId] && (
+        <WhatsAppFollowupSheet
+          key={tomorrowFor.job.id}
+          open
+          clientName={clientsById[tomorrowFor.job.clientId].name}
           initialMessage={appointmentConfirmMessage(
             company?.businessType,
-            clientsById[tomorrowFor.clientId].name,
+            clientsById[tomorrowFor.job.clientId].name,
             company?.name ?? '',
-            tomorrowFor.scheduledStartAt ? formatTimeInTimezone(tomorrowFor.scheduledStartAt, timezone) : ''
+            tomorrowFor.job.scheduledStartAt ? formatTimeInTimezone(tomorrowFor.job.scheduledStartAt, timezone) : '',
+            tomorrowFor.link
           )}
           onClose={() => setTomorrowFor(null)}
           onSend={(message) => {
-            const c = clientsById[tomorrowFor.clientId];
+            const target = tomorrowFor;
+            const c = clientsById[target.job.clientId];
             const number = toWhatsAppNumber(c.whatsapp || c.phone, timezone);
             window.open(buildWhatsAppLink(number, message), '_blank', 'noopener,noreferrer');
-            markTomorrowSent(tomorrowFor.id);
+            markTomorrowReminded(target.job.id);
             setTomorrowFor(null);
           }}
         />
