@@ -7,6 +7,7 @@ import { Button, EmptyState, ErrorState } from '../components/ui';
 import { useCurrentCompany } from '../contexts/useCurrentCompany';
 import { useOpportunityStore } from '../store/opportunityStore';
 import { useClientStore } from '../store/clientStore';
+import { useTerms } from '../hooks/useTerms';
 import { useClientsById } from '../hooks/useClientsById';
 import { filterClients, searchClientsLocal, type ClientFilter } from '../services/clientService';
 import { isVisibleOpportunity } from '../services/opportunityService';
@@ -25,7 +26,8 @@ export default function ClientsPage() {
   const { company } = useCurrentCompany();
   const companyId = company?.id;
   const { clients, loading, error, refetch } = useClientsById();
-  const createClient = useClientStore((s) => s.createClient);
+  const createClientWithFollowup = useClientStore((s) => s.createClientWithFollowup);
+  const terms = useTerms();
   const opportunities = useOpportunityStore((s) => s.opportunities);
   const loadOpportunities = useOpportunityStore((s) => s.load);
 
@@ -50,9 +52,9 @@ export default function ClientsPage() {
   return (
     <div className="space-y-4 pb-4">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">{t.clients.title}</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">{terms.clients}</h1>
         <Button size="sm" icon={<Plus size={16} />} onClick={() => setNewClientOpen(true)}>
-          {t.clients.newClient}
+          {terms.newClient}
         </Button>
       </div>
 
@@ -91,8 +93,8 @@ export default function ClientsPage() {
       <NewClientSheet
         open={newClientOpen}
         onClose={() => setNewClientOpen(false)}
-        onCreate={async (input) => {
-          const result = await createClient(input);
+        onCreate={async (input, followup) => {
+          const result = await createClientWithFollowup(input, followup);
           return result !== null;
         }}
       />

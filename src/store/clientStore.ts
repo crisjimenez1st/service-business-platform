@@ -11,6 +11,10 @@ interface ClientState {
   error: ServiceError | null;
   load: (companyId: string) => Promise<void>;
   createClient: (input: ClientDomainInput) => Promise<Client | null>;
+  createClientWithFollowup: (
+    input: ClientDomainInput,
+    followup: { dueDate: string; reason?: string } | null
+  ) => Promise<Client | null>;
   updateClient: (id: string, patch: Partial<ClientDomainInput>) => Promise<Client | null>;
   deleteClient: (id: string) => Promise<boolean>;
 }
@@ -79,6 +83,18 @@ export const useClientStore = create<ClientState>((set, get) => ({
     const { companyId } = get();
     if (!companyId) return null;
     const result = await clientService.createClient(companyId, input);
+    if (result.error) {
+      set({ error: result.error });
+      return null;
+    }
+    set({ clients: [...get().clients, result.data], error: null });
+    return result.data;
+  },
+
+  createClientWithFollowup: async (input, followup) => {
+    const { companyId } = get();
+    if (!companyId) return null;
+    const result = await clientService.createClientWithFollowup(companyId, input, followup);
     if (result.error) {
       set({ error: result.error });
       return null;

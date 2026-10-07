@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DollarSign, Clock, Briefcase, TrendingUp, FileText, Wallet } from 'lucide-react';
+import { DollarSign, Clock, Briefcase, TrendingUp, FileText, Wallet, BellRing, ChevronRight } from 'lucide-react';
 import MetricCard from '../components/dashboard/MetricCard';
 import TodayJobCard from '../components/dashboard/TodayJobCard';
 import OpportunityCard from '../components/dashboard/OpportunityCard';
 import PostponeModal from '../components/opportunities/PostponeModal';
 import DiscardModal from '../components/opportunities/DiscardModal';
 import ContactSheet from '../components/opportunities/ContactSheet';
-import { EmptyState, ErrorState, Button, Badge } from '../components/ui';
+import { Card, EmptyState, ErrorState, Button, Badge } from '../components/ui';
 import { useCurrentCompany } from '../contexts/useCurrentCompany';
 import { useOpportunityStore } from '../store/opportunityStore';
+import { useFollowupStore } from '../store/followupStore';
+import { useTerms } from '../hooks/useTerms';
 import { useClientsById } from '../hooks/useClientsById';
 import { useOpportunityActions } from '../hooks/useOpportunityActions';
 import { getDashboardMetrics, type DashboardMetrics } from '../services/dashboardService';
@@ -32,6 +34,15 @@ export default function DashboardPage() {
   const loadOpportunities = useOpportunityStore((s) => s.load);
   const { clientsById } = useClientsById();
   const actions = useOpportunityActions();
+  const terms = useTerms();
+  const followupCount = useFollowupStore((s) => s.items.length);
+  const followupsLoading = useFollowupStore((s) => s.loading);
+  const followupsError = useFollowupStore((s) => s.error);
+  const loadFollowups = useFollowupStore((s) => s.load);
+
+  useEffect(() => {
+    if (companyId && canViewCollections) loadFollowups(companyId);
+  }, [companyId, canViewCollections, loadFollowups]);
 
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
 
@@ -97,6 +108,36 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 pb-4">
       <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">{t.dashboard.title}</h1>
+
+      {/* Por avisar hoy — seguimientos vencidos (get_followups_due); lleva a la pantalla diaria */}
+      {canViewCollections && !followupsError && (
+        <button
+          type="button"
+          onClick={() => navigate('/followups')}
+          className="block w-full text-left rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+        >
+          <Card className={followupCount > 0 ? 'border-brand-200 bg-brand-50/60' : ''}>
+            <div className="flex items-center gap-3">
+              <div className="text-brand-600">
+                <BellRing size={22} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-500">{terms.followupsToday}</p>
+                <p className="text-lg font-semibold text-slate-900">
+                  {followupsLoading && followupCount === 0
+                    ? '…'
+                    : followupCount === 0
+                      ? 'Nadie por avisar hoy'
+                      : followupCount === 1
+                        ? '1 persona por avisar'
+                        : `${followupCount} personas por avisar`}
+                </p>
+              </div>
+              <ChevronRight size={20} className="text-slate-400" />
+            </div>
+          </Card>
+        </button>
+      )}
 
       {/* Métricas principales */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">

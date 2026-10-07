@@ -30,6 +30,8 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const [company, setCompany] = useState<CurrentCompany | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Usuario para el que ya terminó la primera carga: evita un instante de "sin empresa" justo después de iniciar sesión.
+  const [resolvedUserId, setResolvedUserId] = useState<string | null>(null);
 
   async function loadCompany() {
     if (!user) {
@@ -102,12 +104,12 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (authLoading) return;
-    loadCompany();
+    loadCompany().finally(() => setResolvedUserId(user?.id ?? null));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, authLoading]);
 
   return (
-    <CompanyContext.Provider value={{ company, loading: authLoading || loading, error, refresh: loadCompany }}>
+    <CompanyContext.Provider value={{ company, loading: authLoading || loading || (!!user && resolvedUserId !== user.id), error, refresh: loadCompany }}>
       {children}
     </CompanyContext.Provider>
   );

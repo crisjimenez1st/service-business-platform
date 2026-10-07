@@ -8,6 +8,7 @@ import MobileAgendaView from '../components/calendar/MobileAgendaView';
 import UnscheduledJobsRow from '../components/calendar/UnscheduledJobsRow';
 import JobDetailSheet from '../components/calendar/JobDetailSheet';
 import { useCurrentCompany } from '../contexts/useCurrentCompany';
+import { useTerms } from '../hooks/useTerms';
 import { useClientsById } from '../hooks/useClientsById';
 import { useJobStore } from '../store/jobStore';
 import { useMyJobsStore } from '../store/myJobsStore';
@@ -36,6 +37,7 @@ import { t } from '../i18n/es';
  */
 export default function CalendarPage() {
   const { company } = useCurrentCompany();
+  const terms = useTerms();
   const companyId = company?.id;
   const role = company?.role;
   const timezone = company?.timezone ?? 'America/Managua';
@@ -153,7 +155,7 @@ export default function CalendarPage() {
   if (isTechnician) {
     return (
       <div className="space-y-4 pb-4">
-        <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">{t.calendar.title}</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">{terms.calendar}</h1>
         <CalendarNav
           viewMode="day"
           onViewModeChange={() => {}}

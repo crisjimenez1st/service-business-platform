@@ -1,12 +1,17 @@
 import { useState } from 'react';
 import { Sheet, Button } from '../ui';
+import FollowupWhenPicker from './FollowupWhenPicker';
 import type { ClientDomainInput } from '../../services/mappers/clientMapper';
+import { useCurrentCompany } from '../../contexts/useCurrentCompany';
+import { useTerms } from '../../hooks/useTerms';
+import { getTodayKeyInTimezone } from '../../utils/timezone';
+import { resolveFollowupDate, type FollowupChoice } from '../../utils/followupDates';
 import { t } from '../../i18n/es';
 
 interface NewClientSheetProps {
   open: boolean;
   onClose: () => void;
-  onCreate: (input: ClientDomainInput) => Promise<boolean>;
+  onCreate: (input: ClientDomainInput, followup: { dueDate: string; reason?: string } | null) => Promise<boolean>;
 }
 
 /**
@@ -27,10 +32,24 @@ export default function NewClientSheet({ open, onClose, onCreate }: NewClientShe
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
   const [notes, setNotes] = useState('');
+  const [consent, setConsent] = useState(true);
+  const [choice, setChoice] = useState<FollowupChoice>('none');
+  const [customDate, setCustomDate] = useState('');
+  const [reason, setReason] = useState('');
+  const [moreOpen, setMoreOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const { company } = useCurrentCompany();
+  const terms = useTerms();
+  const timezone = company?.timezone ?? 'America/Managua';
+
   function reset() {
+    setConsent(true);
+    setChoice('none');
+    setCustomDate('');
+    setReason('');
+    setMoreOpen(false);
     setName('');
     setPhone('');
     setWhatsapp('');
@@ -56,6 +75,13 @@ export default function NewClientSheet({ open, onClose, onCreate }: NewClientShe
       return;
     }
 
+    const todayKey = getTodayKeyInTimezone(timezone);
+    const dueDate = resolveFollowupDate(choice, customDate, todayKey);
+    if (choice === 'custom' && !dueDate) {
+      setError('Elige una fecha de hoy en adelante.');
+      return;
+    }
+
     setSaving(true);
     setError(null);
     const ok = await onCreate({
@@ -65,14 +91,15 @@ export default function NewClientSheet({ open, onClose, onCreate }: NewClientShe
       email: email.trim() || undefined,
       address: address.trim() || undefined,
       notes: notes.trim() || undefined,
-    });
+      contactConsent: consent,
+    }, dueDate ? { dueDate, reason: reason.trim() || undefined } : null);
     setSaving(false);
 
     if (ok) {
       reset();
       onClose();
     } else {
-      setError('No pudimos guardar el cliente. Intenta de nuevo.');
+      setError('No pudimos guardar. Intenta de nuevo.');
     }
   }
 
@@ -80,7 +107,7 @@ export default function NewClientSheet({ open, onClose, onCreate }: NewClientShe
     <Sheet
       open={open}
       onClose={handleClose}
-      title={t.clients.newClient}
+      title={terms.newClient}
       footer={
         <Button fullWidth onClick={handleSave} disabled={saving}>
           {saving ? t.common.loading : t.clients.save}
@@ -125,6 +152,40 @@ export default function NewClientSheet({ open, onClose, onCreate }: NewClientShe
           />
         </div>
 
+        <label className="flex items-start gap-3 min-h-11 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={consent}
+            onChange={(e) => setConsent(e.target.checked)}
+            className="mt-0.5 h-5 w-5 rounded border-slate-300 text-brand-600 focus-visible:ring-2 focus-visible:ring-brand-500"
+          />
+          <span className="text-sm text-slate-700">{terms.acceptsReminders}</span>
+        </label>
+
+        {consent && (
+          <FollowupWhenPicker
+            question={terms.whenReturn}
+            choice={choice}
+            onChoice={setChoice}
+            customDate={customDate}
+            onCustomDate={setCustomDate}
+            reason={reason}
+            onReason={setReason}
+            minDate={getTodayKeyInTimezone(timezone)}
+          />
+        )}
+
+        <button
+          type="button"
+          onClick={() => setMoreOpen((v) => !v)}
+          aria-expanded={moreOpen}
+          className="text-sm font-medium text-brand-600 hover:text-brand-700 min-h-9"
+        >
+          {moreOpen ? 'Menos datos' : 'Más datos (correo, dirección, notas)'}
+        </button>
+
+        {moreOpen && (
+          <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">
             {t.clients.email}
@@ -160,6 +221,9 @@ export default function NewClientSheet({ open, onClose, onCreate }: NewClientShe
             className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:border-brand-500 resize-none"
           />
         </div>
+
+          </div>
+        )}
 
         {error && (
           <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>

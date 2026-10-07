@@ -122,6 +122,45 @@ export async function createClient(
   }
 }
 
+/**
+ * Alta de cliente + seguimiento en una sola transacción de servidor
+ * (RPC create_client_with_followup, migración 014): nunca queda un
+ * cliente creado sin su aviso, ni al revés. followup null = sin aviso.
+ */
+export async function createClientWithFollowup(
+  companyId: string,
+  input: ClientDomainInput,
+  followup: { dueDate: string; reason?: string } | null
+): Promise<ServiceResult<Client>> {
+  try {
+    const { data, error } = await supabase.rpc('create_client_with_followup', {
+      p_company_id: companyId,
+      p_name: input.name,
+      p_phone: input.phone,
+      p_whatsapp: input.whatsapp ?? null,
+      p_contact_consent: input.contactConsent ?? true,
+      p_followup_due_date: followup?.dueDate ?? null,
+      p_followup_title: followup ? 'Seguimiento' : null,
+      p_followup_reason: followup?.reason ?? null,
+    });
+    if (error) return fail(mapSupabaseError(error));
+    const created = clientRowToDomain(data);
+
+    // La RPC solo recibe los datos mínimos; email/dirección/notas (opcionales) se completan después.
+    if (input.email || input.address || input.notes) {
+      const extra = await updateClient(created.id, companyId, {
+        email: input.email,
+        address: input.address,
+        notes: input.notes,
+      });
+      if (!extra.error) return ok(extra.data);
+    }
+    return ok(created);
+  } catch (err) {
+    return fail(mapSupabaseError(err));
+  }
+}
+
 export async function updateClient(
   id: string,
   companyId: string,

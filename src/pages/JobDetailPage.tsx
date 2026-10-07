@@ -1,3 +1,6 @@
+import ScheduleFollowupSheet from '../components/followups/ScheduleFollowupSheet';
+import { createFollowup } from '../services/followupService';
+import { useTerms } from '../hooks/useTerms';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Calendar as CalendarIcon, Pencil, MapPin } from 'lucide-react';
@@ -45,6 +48,7 @@ export default function JobDetailPage() {
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [advancing, setAdvancing] = useState(false);
+  const [followupOpen, setFollowupOpen] = useState(false);
 
   const { clientsById } = useClientsById();
   const technicians = useJobStore((s) => s.technicians);
@@ -52,6 +56,7 @@ export default function JobDetailPage() {
   const assignTechnician = useJobStore((s) => s.assignTechnician);
   const scheduleJobAction = useJobStore((s) => s.schedule);
   const advanceStatus = useJobStore((s) => s.advanceStatus);
+  const terms = useTerms();
   const cancel = useJobStore((s) => s.cancel);
 
   async function loadJob() {
@@ -81,7 +86,14 @@ export default function JobDetailPage() {
     setAdvancing(true);
     const updated = await advanceStatus(job.id, newStatus);
     setAdvancing(false);
-    if (updated) setJob(updated);
+    if (updated) {
+      setJob(updated);
+      // Clínicas y similares: al terminar la cita se pregunta cuándo debe volver.
+      const canFollowUp = company?.role === 'owner' || company?.role === 'office';
+      if (newStatus === 'completed' && canFollowUp && company?.businessType !== 'technical_services') {
+        setFollowupOpen(true);
+      }
+    }
   }
 
   async function handleCancel(reason: string, category?: string) {
@@ -306,6 +318,19 @@ export default function JobDetailPage() {
       />
 
       <CancelJobModal open={cancelOpen} onClose={() => setCancelOpen(false)} onConfirm={handleCancel} />
+      {followupOpen && (
+        <ScheduleFollowupSheet
+          open
+          question={terms.whenReturn}
+          timezone={timezone}
+          onClose={() => setFollowupOpen(false)}
+          onSave={async (f) => {
+            if (!companyId) return false;
+            const result = await createFollowup(companyId, { clientId: job.clientId, ...f });
+            return !result.error;
+          }}
+        />
+      )}
     </div>
   );
 }

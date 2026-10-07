@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../contexts/useAuth';
+import { useCurrentCompany } from '../../contexts/useCurrentCompany';
 
 /**
  * Protege rutas que requieren sesión activa de Supabase (ya no depende
@@ -15,13 +16,19 @@ import { useAuth } from '../../contexts/useAuth';
  */
 export default function ProtectedRoute() {
   const { user, loading } = useAuth();
+  const { company, loading: companyLoading, error: companyError } = useCurrentCompany();
 
-  if (loading) {
+  if (loading || (user && companyLoading)) {
     return null;
   }
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Cuenta nueva sin empresa: primero se crea (nombre + tipo de negocio).
+  if (!company && !companyError) {
+    return <Navigate to="/onboarding" replace />;
   }
 
   return <Outlet />;

@@ -14,6 +14,9 @@ import QuotePublicPage from './pages/QuotePublicPage';
 import CalendarPage from './pages/CalendarPage';
 import JobsPage from './pages/JobsPage';
 import JobDetailPage from './pages/JobDetailPage';
+import OnboardingPage from './pages/OnboardingPage';
+import SettingsPage from './pages/SettingsPage';
+import FollowupsPage from './pages/FollowupsPage';
 import CollectionsPage from './pages/CollectionsPage';
 import ComingSoonPage from './pages/ComingSoonPage';
 import { AuthProvider } from './contexts/AuthContext';
@@ -40,6 +43,7 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/onboarding" element={<OnboardingPage />} />
 
             {/*
               Ruta pública de cotización: SIN AppLayout (no sidebar, no
@@ -64,12 +68,13 @@ export default function App() {
                 <Route path="/more" element={<ComingSoonPage title={t.nav.more} />} />
                 <Route path="/calendar" element={<CalendarPage />} />
                 <Route path="/technicians" element={<ComingSoonPage title={t.nav.technicians} />} />
+                <Route path="/followups" element={<FollowupsPage />} />
                 <Route path="/collections" element={<CollectionsPage />} />
                 <Route path="/payments" element={<Navigate to="/collections" replace />} />
                 <Route path="/equipment" element={<ComingSoonPage title={t.nav.equipment} />} />
                 <Route path="/warranties" element={<ComingSoonPage title={t.nav.warranties} />} />
                 <Route path="/reports" element={<ComingSoonPage title={t.nav.reports} />} />
-                <Route path="/settings" element={<ComingSoonPage title={t.nav.settings} />} />
+                <Route path="/settings" element={<SettingsPage />} />
               </Route>
             </Route>
 
