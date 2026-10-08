@@ -11,6 +11,9 @@ export interface CurrentCompany {
   timezone: string;
   /** Tipo de negocio (companies.business_type): decide el lenguaje y el menú de la app. */
   businessType: BusinessType;
+  /** Fin de la prueba gratis y fecha hasta la que está pagado el plan (migración 018). */
+  trialEndsAt: string | null;
+  paidUntil: string | null;
   role: CompanyMemberRoleDb;
 }
 

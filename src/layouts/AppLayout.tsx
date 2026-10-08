@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/layout/Sidebar';
 import BottomNav from '../components/layout/BottomNav';
+import PlanBanner from '../components/layout/PlanBanner';
 import MoreSheet from '../components/layout/MoreSheet';
 
 /**
@@ -20,6 +21,7 @@ export default function AppLayout() {
       <Sidebar />
       <div className="flex-1 min-w-0">
         <main className="pb-20 md:pb-6 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 max-w-7xl mx-auto">
+          <PlanBanner />
           <Outlet />
         </main>
       </div>
