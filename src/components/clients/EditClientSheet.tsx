@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Sheet, Button } from '../ui';
 import type { Client } from '../../types';
 import type { ClientDomainInput } from '../../services/mappers/clientMapper';
+import { useTerms } from '../../hooks/useTerms';
 import { t } from '../../i18n/es';
 
 interface EditClientSheetProps {
@@ -29,6 +30,8 @@ export default function EditClientSheet({ open, client, onClose, onSave }: EditC
   const [email, setEmail] = useState(client.email ?? '');
   const [address, setAddress] = useState(client.address ?? '');
   const [notes, setNotes] = useState(client.notes ?? '');
+  const [consent, setConsent] = useState(client.contactConsent ?? true);
+  const terms = useTerms();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,6 +60,7 @@ export default function EditClientSheet({ open, client, onClose, onSave }: EditC
       email: email.trim() || undefined,
       address: address.trim() || undefined,
       notes: notes.trim() || undefined,
+      contactConsent: consent,
     });
     setSaving(false);
 
@@ -151,6 +155,16 @@ export default function EditClientSheet({ open, client, onClose, onSave }: EditC
             className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:border-brand-500 resize-none"
           />
         </div>
+
+        <label className="flex items-start gap-3 min-h-11 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={consent}
+            onChange={(e) => setConsent(e.target.checked)}
+            className="mt-0.5 h-5 w-5 rounded border-slate-300 text-brand-600 focus-visible:ring-2 focus-visible:ring-brand-500"
+          />
+          <span className="text-sm text-slate-700">{terms.acceptsReminders}</span>
+        </label>
 
         {error && (
           <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>

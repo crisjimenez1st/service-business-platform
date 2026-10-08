@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
+import { useMoney } from './useMoney';
 import { useNavigate } from 'react-router-dom';
 import { useOpportunityStore } from '../store/opportunityStore';
 import { useQuoteStore } from '../store/quoteStore';
 import { useClientsById } from './useClientsById';
 import type { ServiceError } from '../services/errors/serviceError';
-import { formatCurrency } from '../utils/currency';
 import { opportunityWhatsAppMessage } from '../utils/whatsapp';
 
 /**
@@ -35,6 +35,7 @@ import { opportunityWhatsAppMessage } from '../utils/whatsapp';
  * el botón es solo la primera línea de defensa, no la única.
  */
 export function useOpportunityActions() {
+  const money = useMoney();
   const navigate = useNavigate();
   const [postponeTargetId, setPostponeTargetId] = useState<string | null>(null);
   const [discardTargetId, setDiscardTargetId] = useState<string | null>(null);
@@ -147,9 +148,9 @@ export function useOpportunityActions() {
     return opportunityWhatsAppMessage(
       contactTargetClient.name,
       opp.title,
-      formatCurrency(opp.estimatedValue)
+      money(opp.estimatedValue)
     );
-  }, [opportunities, contactTargetId, contactTargetClient]);
+  }, [opportunities, contactTargetId, contactTargetClient, money]);
 
   return {
     postponeTargetId,

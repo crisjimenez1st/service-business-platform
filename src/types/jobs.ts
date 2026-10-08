@@ -1,4 +1,4 @@
-import type { UUID } from './core';
+import type { UUID, CurrencyCode } from './core';
 
 export type QuoteStatus =
   | 'draft'
@@ -56,6 +56,8 @@ export interface Quote {
   discount: number;
   tax: number;
   total: number;
+  /** Moneda de la cotización, congelada al crearla (quotes.currency, migración 015). */
+  currency: CurrencyCode;
   createdAt: string;
   updatedAt: string;
   sentAt?: string;
@@ -226,7 +228,12 @@ export interface Job {
   address?: string;
   mapsUrl?: string;
   total?: number;
+  /** Caché transaccional recalculada por el servidor desde payments activos -- nunca se edita desde el cliente. */
   paidAmount?: number;
+  /** Moneda del Job, congelada al crearlo (jobs.currency, migración 012). */
+  currency: CurrencyCode;
+  /** Fecha calendario de vencimiento (YYYY-MM-DD), opcional. */
+  dueDate?: string;
   /** Presentes solo cuando status='cancelled' -- ver cancel_job (migración 011). */
   cancellationReason?: string;
   cancellationCategory?: string;

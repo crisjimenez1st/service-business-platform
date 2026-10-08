@@ -44,6 +44,7 @@ export function quoteRowToDomain(row: QuoteRow, items: QuoteItemRow[]): Quote {
     discount: row.discount,
     tax: row.tax,
     total: row.total,
+    currency: row.currency === 'USD' ? 'USD' : 'NIO',
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     sentAt: row.sent_at ?? undefined,

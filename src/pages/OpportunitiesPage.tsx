@@ -8,12 +8,12 @@ import DiscardModal from '../components/opportunities/DiscardModal';
 import ContactSheet from '../components/opportunities/ContactSheet';
 import NewOpportunitySheet from '../components/opportunities/NewOpportunitySheet';
 import { useCurrentCompany } from '../contexts/useCurrentCompany';
+import { useMoney } from '../hooks/useMoney';
 import { useOpportunityStore } from '../store/opportunityStore';
 import { useClientsById } from '../hooks/useClientsById';
 import { useOpportunityActions } from '../hooks/useOpportunityActions';
 import { OPPORTUNITY_CATEGORY_LABELS, type OpportunityCategory } from '../types';
 import { filterOpportunities, isVisibleOpportunity, type OpportunityFilter } from '../services/opportunityService';
-import { formatCurrency } from '../utils/currency';
 import { t } from '../i18n/es';
 
 const CATEGORY_OPTIONS: { value: OpportunityFilter; label: string }[] = [
@@ -25,6 +25,7 @@ const CATEGORY_OPTIONS: { value: OpportunityFilter; label: string }[] = [
 
 export default function OpportunitiesPage() {
   const { company } = useCurrentCompany();
+  const money = useMoney();
   const companyId = company?.id;
   const opportunities = useOpportunityStore((s) => s.opportunities);
   const loading = useOpportunityStore((s) => s.loading);
@@ -80,7 +81,7 @@ export default function OpportunitiesPage() {
         <Card className="border-brand-200 bg-brand-50/50">
           <p className="text-xs sm:text-sm text-slate-500">{t.opportunities.potentialIncome}</p>
           <p className="text-xl sm:text-2xl font-semibold text-brand-700 mt-1">
-            {formatCurrency(totalPotential)}
+            {money(totalPotential)}
           </p>
         </Card>
       </div>

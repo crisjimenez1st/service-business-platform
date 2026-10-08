@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
+import { useMoney } from '../../hooks/useMoney';
 import { Phone, MapPin } from 'lucide-react';
 import { Card, Badge } from '../ui';
 import type { Client } from '../../types';
-import { formatCurrency } from '../../utils/currency';
 import { formatRelativeToToday } from '../../utils/dates';
 import { t } from '../../i18n/es';
 
@@ -12,6 +12,7 @@ interface ClientListCardProps {
 }
 
 export default function ClientListCard({ client, hasOpportunity }: ClientListCardProps) {
+  const money = useMoney();
   const navigate = useNavigate();
   const hasBalance = (client.pendingBalance ?? 0) > 0;
 
@@ -44,7 +45,7 @@ export default function ClientListCard({ client, hasOpportunity }: ClientListCar
           )}
           {hasBalance && (
             <span className="text-amber-700 font-medium">
-              {t.clients.balance}: {formatCurrency(client.pendingBalance ?? 0)}
+              {t.clients.balance}: {money(client.pendingBalance ?? 0)}
             </span>
           )}
         </div>

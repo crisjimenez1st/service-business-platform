@@ -1,5 +1,6 @@
 import { createContext } from 'react';
 import type { CompanyMemberRoleDb } from '../types/database.types';
+import type { BusinessType } from '../types';
 
 export interface CurrentCompany {
   id: string;
@@ -8,6 +9,8 @@ export interface CurrentCompany {
   logoUrl: string | null;
   /** Zona horaria IANA de la empresa (ej. "America/Managua"), ver companies.timezone (migración 010). Usada por el calendario para agrupar/presentar fechas correctamente -- nunca UTC ni la timezone del navegador. */
   timezone: string;
+  /** Tipo de negocio (companies.business_type): decide el lenguaje y el menú de la app. */
+  businessType: BusinessType;
   role: CompanyMemberRoleDb;
 }
 

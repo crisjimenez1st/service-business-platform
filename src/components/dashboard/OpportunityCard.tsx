@@ -1,8 +1,8 @@
 import { MessageCircle, Clock3, FileText } from 'lucide-react';
+import { useMoney } from '../../hooks/useMoney';
 import { Card, Button, Badge } from '../ui';
 import type { Opportunity, Client } from '../../types';
 import { t } from '../../i18n/es';
-import { formatCurrency } from '../../utils/currency';
 import { opportunityWhatsAppMessage, buildWhatsAppLink } from '../../utils/whatsapp';
 import { formatRelativeToToday } from '../../utils/dates';
 
@@ -40,12 +40,13 @@ export default function OpportunityCard({
   creatingQuote,
   compact,
 }: OpportunityCardProps) {
+  const money = useMoney();
   if (!client) return null;
 
   const whatsappMsg = opportunityWhatsAppMessage(
     client.name,
     opportunity.title,
-    formatCurrency(opportunity.estimatedValue)
+    money(opportunity.estimatedValue)
   );
   const wasContacted = opportunity.status === 'contacted';
 
@@ -66,7 +67,7 @@ export default function OpportunityCard({
         </div>
         <div className="text-right shrink-0">
           <p className="text-lg sm:text-xl font-semibold text-brand-700">
-            {formatCurrency(opportunity.estimatedValue)}
+            {money(opportunity.estimatedValue)}
           </p>
         </div>
       </div>

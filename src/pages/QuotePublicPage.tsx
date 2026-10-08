@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Shield, MessageCircle } from 'lucide-react';
+import { Building2 as Shield, MessageCircle } from 'lucide-react';
 import { Button, EmptyState, ErrorState, Sheet } from '../components/ui';
 import {
   getPublicQuoteByToken,
@@ -12,7 +12,7 @@ import type { ServiceError } from '../services/errors/serviceError';
 import { formatCurrency } from '../utils/currency';
 import { formatDate } from '../utils/dates';
 import { buildWhatsAppLink } from '../utils/whatsapp';
-import type { PublicQuoteView, RejectionReason } from '../types';
+import type { CurrencyCode, PublicQuoteView, RejectionReason } from '../types';
 import { t } from '../i18n/es';
 
 const REJECTION_OPTIONS: { value: RejectionReason; label: string }[] = [
@@ -132,6 +132,7 @@ export default function QuotePublicPage() {
     );
   }
 
+  const publicCurrency: CurrencyCode = view.currency === 'USD' ? 'USD' : 'NIO';
   const isExpired = view.effectiveStatus === 'expired';
   /**
    * Misma regla que el servicio/RPC (PUBLIC_RESPONSE_ALLOWED_STATUSES
@@ -217,10 +218,10 @@ export default function QuotePublicPage() {
                 <div className="min-w-0">
                   <p className="text-slate-900">{item.description}</p>
                   <p className="text-slate-500 text-xs mt-0.5">
-                    {item.quantity} × {formatCurrency(item.unitPrice)}
+                    {item.quantity} × {formatCurrency(item.unitPrice, publicCurrency)}
                   </p>
                 </div>
-                <span className="font-medium text-slate-900 shrink-0">{formatCurrency(item.subtotal)}</span>
+                <span className="font-medium text-slate-900 shrink-0">{formatCurrency(item.subtotal, publicCurrency)}</span>
               </div>
             ))}
           </div>
@@ -229,23 +230,23 @@ export default function QuotePublicPage() {
           <div className="border-t border-slate-200 pt-4 space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-slate-500">{t.quotePublic.subtotal}</span>
-              <span className="text-slate-900">{formatCurrency(view.subtotal)}</span>
+              <span className="text-slate-900">{formatCurrency(view.subtotal, publicCurrency)}</span>
             </div>
             {view.discount > 0 && (
               <div className="flex justify-between">
                 <span className="text-slate-500">{t.quotes.discount}</span>
-                <span className="text-slate-900">− {formatCurrency(view.discount)}</span>
+                <span className="text-slate-900">− {formatCurrency(view.discount, publicCurrency)}</span>
               </div>
             )}
             {view.tax > 0 && (
               <div className="flex justify-between">
                 <span className="text-slate-500">{t.quotes.tax}</span>
-                <span className="text-slate-900">{formatCurrency(view.tax)}</span>
+                <span className="text-slate-900">{formatCurrency(view.tax, publicCurrency)}</span>
               </div>
             )}
             <div className="flex justify-between items-center pt-2 border-t border-slate-200">
               <span className="font-semibold text-slate-900">{t.quotePublic.total}</span>
-              <span className="text-2xl font-bold text-brand-700">{formatCurrency(view.total)}</span>
+              <span className="text-2xl font-bold text-brand-700">{formatCurrency(view.total, publicCurrency)}</span>
             </div>
           </div>
 
@@ -308,7 +309,7 @@ export default function QuotePublicPage() {
         }
       >
         <p className="text-sm text-slate-600">
-          {t.quotePublic.client}: {view.clientName} — {t.quotePublic.total}: {formatCurrency(view.total)}
+          {t.quotePublic.client}: {view.clientName} — {t.quotePublic.total}: {formatCurrency(view.total, publicCurrency)}
         </p>
       </Sheet>
 

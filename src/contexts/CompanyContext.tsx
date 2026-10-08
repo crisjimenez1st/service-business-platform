@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 import { CompanyContext, type CurrentCompany } from './companyContextDefinition';
+import type { BusinessType } from '../types';
 
 /**
  * Resuelve la empresa activa del usuario autenticado consultando
@@ -29,6 +30,8 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const [company, setCompany] = useState<CurrentCompany | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Usuario para el que ya terminó la primera carga: evita un instante de "sin empresa" justo después de iniciar sesión.
+  const [resolvedUserId, setResolvedUserId] = useState<string | null>(null);
 
   async function loadCompany() {
     if (!user) {
@@ -76,7 +79,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
     const { data: companyRow, error: companyError } = await supabase
       .from('companies')
-      .select('id, name, currency, logo_url, timezone')
+      .select('id, name, currency, logo_url, timezone, business_type')
       .eq('id', membership.company_id)
       .maybeSingle();
 
@@ -93,6 +96,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       currency: companyRow.currency,
       logoUrl: companyRow.logo_url,
       timezone: companyRow.timezone,
+      businessType: companyRow.business_type as BusinessType,
       role: membership.role,
     });
     setLoading(false);
@@ -100,12 +104,12 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (authLoading) return;
-    loadCompany();
+    loadCompany().finally(() => setResolvedUserId(user?.id ?? null));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, authLoading]);
 
   return (
-    <CompanyContext.Provider value={{ company, loading: authLoading || loading, error, refresh: loadCompany }}>
+    <CompanyContext.Provider value={{ company, loading: authLoading || loading || (!!user && resolvedUserId !== user.id), error, refresh: loadCompany }}>
       {children}
     </CompanyContext.Provider>
   );

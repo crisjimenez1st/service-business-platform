@@ -90,6 +90,37 @@ export function getLocalHourInTimezone(isoString: string, timezone: string): num
   return hour === 24 ? 0 : hour;
 }
 
+/** Convierte un ISO timestamptz a un valor de <input type="datetime-local">, en la timezone de la empresa -- para prellenar formularios (reprogramar, fecha de pago). */
+export function isoToLocalDateTimeValue(iso: string, timezone: string): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(new Date(iso));
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '00';
+  const hour = get('hour') === '24' ? '00' : get('hour');
+  return `${get('year')}-${get('month')}-${get('day')}T${hour}:${get('minute')}`;
+}
+
+/** "Hoy" como fecha calendario (YYYY-MM-DD) en la timezone de la empresa -- para comparar contra fechas de vencimiento sin depender de UTC. */
+export function getTodayKeyInTimezone(timezone: string): string {
+  return getDayKeyInTimezone(new Date().toISOString(), timezone);
+}
+
+/** Formatea una fecha calendario YYYY-MM-DD ("15 sep 2026") sin convertir zona horaria: es un día, no un instante. */
+export function formatCalendarDate(dateKey: string): string {
+  return new Intl.DateTimeFormat('es-NI', {
+    timeZone: 'UTC',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(`${dateKey}T00:00:00Z`));
+}
+
 /**
  * Convierte un valor de <input type="datetime-local"> (ej.
  * "2026-09-20T14:00", SIN zona horaria) a un timestamptz ISO real,

@@ -1,6 +1,7 @@
 import { getMockTodayJobs } from './mockJobService';
 import { getQuotes, getEffectiveStatus } from './quoteService';
-import type { MockJob as Job } from '../types';
+import { getReceivablesSummary } from './paymentService';
+import type { MockJob as Job, ReceivablesSummary } from '../types';
 
 /**
  * Cada métrica financiera/numérica del dashboard declara explícitamente
@@ -20,13 +21,16 @@ export type MetricValue =
 
 export interface DashboardMetrics {
   /**
-   * ⚠️ unavailable: dependían de Client.totalPaid/pendingBalance,
-   * campos derivados que no existen en la tabla real `clients` de
-   * Supabase (ver clientMapper.ts) -- vendrían de `jobs`/`payments`
-   * reales, que todavía no se migran.
+   * ⚠️ unavailable: depende de ingresos cobrados por periodo, que
+   * todavía no se calculan (Bloque 9, Dashboard gerencial).
    */
   monthSales: MetricValue;
-  pendingCollection: MetricValue;
+  /**
+   * real: get_receivables_summary (migración 013) -- una entrada por
+   * moneda, nunca sumadas entre sí. `null` = no se pudo consultar
+   * (nunca se muestra 0 en su lugar).
+   */
+  receivables: ReceivablesSummary[] | null;
   /** mock: Jobs todavía sobre localDb -- ver jobService.ts. */
   jobsToday: MetricValue;
   todayJobs: Job[];
@@ -43,15 +47,21 @@ export interface DashboardMetrics {
  * dashboard (jobsToday, que sigue mock) no se ve afectado por ese
  * fallo, cada fuente se resuelve de forma independiente.
  */
-export async function getDashboardMetrics(companyId: string): Promise<DashboardMetrics> {
+export async function getDashboardMetrics(companyId: string, companyCurrency: string = 'NIO'): Promise<DashboardMetrics> {
   const todayJobs = getMockTodayJobs(companyId);
 
-  const quotesResult = await getQuotes(companyId);
+  // Cada fuente se resuelve de forma independiente: si una falla, solo
+  // sus métricas quedan unavailable.
+  const [quotesResult, receivablesResult] = await Promise.all([
+    getQuotes(companyId),
+    getReceivablesSummary(companyId),
+  ]);
+  const receivables = receivablesResult.error ? null : receivablesResult.data;
 
   if (quotesResult.error) {
     return {
       monthSales: { status: 'unavailable' },
-      pendingCollection: { status: 'unavailable' },
+      receivables,
       jobsToday: { status: 'mock', value: todayJobs.length },
       todayJobs,
       quotesPendingResponse: { status: 'unavailable' },
@@ -74,11 +84,15 @@ export async function getDashboardMetrics(companyId: string): Promise<DashboardM
 
   return {
     monthSales: { status: 'unavailable' },
-    pendingCollection: { status: 'unavailable' },
+    receivables,
     jobsToday: { status: 'mock', value: todayJobs.length },
     todayJobs,
     quotesPendingResponse: { status: 'real', value: pendingQuotes.length },
     quotesAcceptedThisMonth: { status: 'real', value: acceptedThisMonth.length },
-    quotesPendingValue: { status: 'real', value: pendingQuotes.reduce((sum, q) => sum + q.total, 0) },
+    // Solo cotizaciones en la moneda del negocio: nunca se suman monedas distintas.
+    quotesPendingValue: {
+      status: 'real',
+      value: pendingQuotes.filter((q) => q.currency === companyCurrency).reduce((sum, q) => sum + q.total, 0),
+    },
   };
 }

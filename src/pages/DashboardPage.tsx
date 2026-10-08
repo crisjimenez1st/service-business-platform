@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DollarSign, Clock, Briefcase, TrendingUp, FileText } from 'lucide-react';
+import { DollarSign, Clock, Briefcase, TrendingUp, FileText, Wallet, BellRing, ChevronRight } from 'lucide-react';
 import MetricCard from '../components/dashboard/MetricCard';
 import TodayJobCard from '../components/dashboard/TodayJobCard';
 import OpportunityCard from '../components/dashboard/OpportunityCard';
 import PostponeModal from '../components/opportunities/PostponeModal';
 import DiscardModal from '../components/opportunities/DiscardModal';
 import ContactSheet from '../components/opportunities/ContactSheet';
-import { EmptyState, ErrorState, Button, Badge } from '../components/ui';
+import { Card, EmptyState, ErrorState, Button, Badge } from '../components/ui';
 import { useCurrentCompany } from '../contexts/useCurrentCompany';
 import { useOpportunityStore } from '../store/opportunityStore';
+import { useFollowupStore } from '../store/followupStore';
+import { useTerms } from '../hooks/useTerms';
+import { useMoney } from '../hooks/useMoney';
 import { useClientsById } from '../hooks/useClientsById';
 import { useOpportunityActions } from '../hooks/useOpportunityActions';
 import { getDashboardMetrics, type DashboardMetrics } from '../services/dashboardService';
@@ -17,7 +20,7 @@ import { renderMetric } from '../utils/renderMetric';
 import { isVisibleOpportunity } from '../services/opportunityService';
 import { getAll } from '../services/localDb';
 import { TABLES } from '../services/tables';
-import type { User } from '../types';
+import type { CurrencyCode, User } from '../types';
 import { formatCurrency } from '../utils/currency';
 import { t } from '../i18n/es';
 
@@ -25,12 +28,23 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const { company } = useCurrentCompany();
   const companyId = company?.id;
+  const canViewCollections = company?.role === 'owner' || company?.role === 'office';
   const opportunities = useOpportunityStore((s) => s.opportunities);
   const opportunitiesLoading = useOpportunityStore((s) => s.loading);
   const opportunitiesError = useOpportunityStore((s) => s.error);
   const loadOpportunities = useOpportunityStore((s) => s.load);
   const { clientsById } = useClientsById();
   const actions = useOpportunityActions();
+  const terms = useTerms();
+  const money = useMoney();
+  const followupCount = useFollowupStore((s) => s.items.length);
+  const followupsLoading = useFollowupStore((s) => s.loading);
+  const followupsError = useFollowupStore((s) => s.error);
+  const loadFollowups = useFollowupStore((s) => s.load);
+
+  useEffect(() => {
+    if (companyId && canViewCollections) loadFollowups(companyId);
+  }, [companyId, canViewCollections, loadFollowups]);
 
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
 
@@ -48,13 +62,13 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!companyId) return;
     let cancelled = false;
-    getDashboardMetrics(companyId).then((result) => {
+    getDashboardMetrics(companyId, company?.currency).then((result) => {
       if (!cancelled) setMetrics(result);
     });
     return () => {
       cancelled = true;
     };
-  }, [companyId]);
+  }, [companyId, company?.currency]);
 
   // "active" y "contacted" se muestran igual: contactar a un cliente no
   // debe hacer desaparecer la oportunidad, solo marcarla visualmente.
@@ -87,30 +101,53 @@ export default function DashboardPage() {
 
   // Calculados una sola vez -- ver utils/renderMetric.ts: cada uno
   // decide "—" (unavailable) o el valor + insignia "Demo" (mock).
-  const monthSalesMetric = renderMetric(metrics.monthSales, formatCurrency);
-  const pendingCollectionMetric = renderMetric(metrics.pendingCollection, formatCurrency);
+  const monthSalesMetric = renderMetric(metrics.monthSales, money);
   const jobsTodayMetric = renderMetric(metrics.jobsToday);
   const quotesPendingResponseMetric = renderMetric(metrics.quotesPendingResponse);
   const quotesAcceptedThisMonthMetric = renderMetric(metrics.quotesAcceptedThisMonth);
-  const quotesPendingValueMetric = renderMetric(metrics.quotesPendingValue, formatCurrency);
+  const quotesPendingValueMetric = renderMetric(metrics.quotesPendingValue, money);
 
   return (
     <div className="space-y-6 pb-4">
       <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">{t.dashboard.title}</h1>
 
+      {/* Por avisar hoy — seguimientos vencidos (get_followups_due); lleva a la pantalla diaria */}
+      {canViewCollections && !followupsError && (
+        <button
+          type="button"
+          onClick={() => navigate('/followups')}
+          className="block w-full text-left rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+        >
+          <Card className={followupCount > 0 ? 'border-brand-200 bg-brand-50/60' : ''}>
+            <div className="flex items-center gap-3">
+              <div className="text-brand-600">
+                <BellRing size={22} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-500">{terms.followupsToday}</p>
+                <p className="text-lg font-semibold text-slate-900">
+                  {followupsLoading && followupCount === 0
+                    ? '…'
+                    : followupCount === 0
+                      ? 'Nadie por avisar hoy'
+                      : followupCount === 1
+                        ? '1 persona por avisar'
+                        : `${followupCount} personas por avisar`}
+                </p>
+              </div>
+              <ChevronRight size={20} className="text-slate-400" />
+            </div>
+          </Card>
+        </button>
+      )}
+
       {/* Métricas principales */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         <MetricCard
           label={t.dashboard.monthSales}
           value={monthSalesMetric.display}
           badge={monthSalesMetric.badge}
           icon={<DollarSign size={18} />}
-        />
-        <MetricCard
-          label={t.dashboard.pendingCollection}
-          value={pendingCollectionMetric.display}
-          badge={pendingCollectionMetric.badge}
-          icon={<Clock size={18} />}
         />
         <MetricCard
           label={t.dashboard.jobsToday}
@@ -120,11 +157,53 @@ export default function DashboardPage() {
         />
         <MetricCard
           label={t.dashboard.opportunityValue}
-          value={formatCurrency(totalPotential)}
+          value={money(totalPotential)}
           icon={<TrendingUp size={18} />}
           emphasis
         />
       </div>
+
+      {/* Cobros — dinero real por cobrar (get_receivables_summary), una tarjeta por moneda */}
+      {canViewCollections && (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base sm:text-lg font-semibold text-slate-900">
+              {t.dashboard.collectionsSectionTitle}
+            </h2>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/collections')}>
+              {t.dashboard.viewAll}
+            </Button>
+          </div>
+          {metrics.receivables === null ? (
+            <div className="grid grid-cols-2 gap-3">
+              <MetricCard label={t.dashboard.pendingCollection} value={t.dashboard.unavailable} icon={<Wallet size={18} />} />
+              <MetricCard label={t.dashboard.overdueCollection} value={t.dashboard.unavailable} icon={<Clock size={18} />} />
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {(metrics.receivables.length > 0
+                ? metrics.receivables
+                : [{ currency: (company?.currency ?? 'NIO') as CurrencyCode, outstanding: 0, overdueAmount: 0, overdueCount: 0, openCount: 0 }]
+              ).map((r, _i, all) => (
+                <div key={r.currency} className="contents">
+                  <MetricCard
+                    label={all.length > 1 ? `${t.dashboard.pendingCollection} · ${r.currency}` : t.dashboard.pendingCollection}
+                    value={r.openCount === 0 ? t.dashboard.noReceivables : formatCurrency(r.outstanding, r.currency)}
+                    icon={<Wallet size={18} />}
+                    emphasis={r.overdueCount === 0}
+                  />
+                  <MetricCard
+                    label={all.length > 1 ? `${t.dashboard.overdueCollection} · ${r.currency}` : t.dashboard.overdueCollection}
+                    value={formatCurrency(r.overdueAmount, r.currency)}
+                    icon={<Clock size={18} />}
+                    badge={r.overdueCount > 0 ? `${r.overdueCount} ${t.dashboard.overdueCount}` : undefined}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Trabajos de hoy — datos demo, Jobs todavía no migrado a Supabase */}
       <section>
@@ -196,7 +275,7 @@ export default function DashboardPage() {
 
         <div className="mt-3 flex items-center justify-between rounded-xl bg-brand-600 text-white px-4 py-3">
           <span className="text-sm font-medium">{t.dashboard.totalPotential}</span>
-          <span className="text-lg font-semibold">{formatCurrency(totalPotential)}</span>
+          <span className="text-lg font-semibold">{money(totalPotential)}</span>
         </div>
       </section>
 

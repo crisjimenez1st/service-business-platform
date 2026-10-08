@@ -33,7 +33,7 @@ export default function QuoteSummaryCard({ quote }: QuoteSummaryCardProps) {
         </div>
         <div className="flex items-center justify-between text-sm">
           <span className="text-slate-500">{formatDateShort(quote.issueDate)}</span>
-          <span className="font-semibold text-slate-900">{formatCurrency(quote.total)}</span>
+          <span className="font-semibold text-slate-900">{formatCurrency(quote.total, quote.currency)}</span>
         </div>
       </Card>
     </button>

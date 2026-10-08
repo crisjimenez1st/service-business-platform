@@ -1,3 +1,4 @@
+import type { CurrencyCode } from '../../types';
 import { Trash2 } from 'lucide-react';
 import { Card } from '../ui';
 import { formatCurrency } from '../../utils/currency';
@@ -19,6 +20,7 @@ interface QuoteItemEditorProps {
   canRemove: boolean;
   onChange: (localId: string, patch: Partial<EditableQuoteItem>) => void;
   onRemove: (localId: string) => void;
+  currency: CurrencyCode;
 }
 
 /**
@@ -27,7 +29,7 @@ interface QuoteItemEditorProps {
  * Se usa igual en desktop (mismo componente, la página lo apila en una
  * columna) porque una tabla de inputs no gana claridad frente a esto.
  */
-export default function QuoteItemEditor({ item, index, canRemove, onChange, onRemove }: QuoteItemEditorProps) {
+export default function QuoteItemEditor({ item, index, canRemove, onChange, onRemove, currency }: QuoteItemEditorProps) {
   const subtotal = calculateItemSubtotal(item.quantity, item.unitPrice, item.discount);
 
   return (
@@ -99,7 +101,7 @@ export default function QuoteItemEditor({ item, index, canRemove, onChange, onRe
 
         <div className="flex items-center justify-between pt-2 border-t border-slate-100">
           <span className="text-xs text-slate-500">{t.quotes.itemSubtotal}</span>
-          <span className="text-sm font-semibold text-slate-900">{formatCurrency(subtotal)}</span>
+          <span className="text-sm font-semibold text-slate-900">{formatCurrency(subtotal, currency)}</span>
         </div>
       </div>
     </Card>

@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { PRIMARY_NAV, MORE_NAV_ITEM } from './navConfig';
+import { MORE_NAV_ITEM } from './navConfig';
+import { useNavItems } from '../../hooks/useNavItems';
 
 interface BottomNavProps {
   onMoreClick: () => void;
@@ -16,7 +17,8 @@ interface BottomNavProps {
  */
 export default function BottomNav({ onMoreClick }: BottomNavProps) {
   const navigate = useNavigate();
-  const items = [...PRIMARY_NAV, MORE_NAV_ITEM];
+  const { primary } = useNavItems();
+  const items = [...primary, MORE_NAV_ITEM];
 
   return (
     <nav

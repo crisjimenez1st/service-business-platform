@@ -5,6 +5,7 @@ import QuoteRow from '../components/quotes/QuoteRow';
 import FilterChips from '../components/clients/FilterChips';
 import { Button, EmptyState, ErrorState } from '../components/ui';
 import { useCurrentCompany } from '../contexts/useCurrentCompany';
+import { useTerms } from '../hooks/useTerms';
 import { useQuoteStore } from '../store/quoteStore';
 import { useClientsById } from '../hooks/useClientsById';
 import { filterQuotes, searchQuotesLocal, type QuoteFilter } from '../services/quoteService';
@@ -21,6 +22,7 @@ const FILTER_OPTIONS: { value: QuoteFilter; label: string }[] = [
 export default function QuotesPage() {
   const navigate = useNavigate();
   const { company } = useCurrentCompany();
+  const terms = useTerms();
   const companyId = company?.id;
   const quotes = useQuoteStore((s) => s.quotes);
   const loading = useQuoteStore((s) => s.loading);
@@ -51,7 +53,7 @@ export default function QuotesPage() {
   return (
     <div className="space-y-4 pb-4">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">{t.quotes.title}</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">{terms.quotes}</h1>
         <Button
           size="sm"
           icon={<Plus size={16} />}

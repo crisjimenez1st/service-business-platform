@@ -37,11 +37,11 @@ export default function JobHistoryCard({ job, timezone }: JobHistoryCardProps) {
         {job.total !== undefined && (
           <div className="flex gap-4 mt-2 pt-2 border-t border-slate-100 text-sm">
             <span className="text-slate-500">
-              Total: <span className="text-slate-700 font-medium">{formatCurrency(job.total)}</span>
+              Total: <span className="text-slate-700 font-medium">{formatCurrency(job.total, job.currency)}</span>
             </span>
             {job.paidAmount !== undefined && (
               <span className="text-slate-500">
-                Pagado: <span className="text-slate-700 font-medium">{formatCurrency(job.paidAmount)}</span>
+                Pagado: <span className="text-slate-700 font-medium">{formatCurrency(job.paidAmount, job.currency)}</span>
               </span>
             )}
           </div>

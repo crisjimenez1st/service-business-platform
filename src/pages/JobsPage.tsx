@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import NewAppointmentButton from '../components/calendar/NewAppointmentButton';
 import { Search } from 'lucide-react';
 import { ErrorState, EmptyState } from '../components/ui';
 import JobAgendaCard from '../components/calendar/JobAgendaCard';
 import CancelJobModal from '../components/jobs/CancelJobModal';
 import { useCurrentCompany } from '../contexts/useCurrentCompany';
+import { useTerms } from '../hooks/useTerms';
 import { useClientsById } from '../hooks/useClientsById';
 import { useJobStore } from '../store/jobStore';
 import type { JobStatus } from '../types';
@@ -22,6 +24,7 @@ type TechnicianFilter = 'all' | 'unassigned' | string;
 export default function JobsPage() {
   const navigate = useNavigate();
   const { company } = useCurrentCompany();
+  const terms = useTerms();
   const companyId = company?.id;
   const timezone = company?.timezone ?? 'America/Managua';
 
@@ -123,7 +126,10 @@ export default function JobsPage() {
 
   return (
     <div className="space-y-4 pb-4">
-      <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">{t.jobsPage.title}</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">{terms.jobs}</h1>
+        <NewAppointmentButton onCreated={() => companyId && loadAll(companyId)} />
+      </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 p-3 sm:p-4 space-y-3">
         <div className="relative">

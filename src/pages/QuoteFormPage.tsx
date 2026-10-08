@@ -12,7 +12,7 @@ import { calculateQuoteTotals, isQuoteEditable } from '../services/quoteService'
 import type { ServiceError } from '../services/errors/serviceError';
 import { todayIso } from '../utils/dates';
 import { t } from '../i18n/es';
-import type { Client, Quote } from '../types';
+import type { Client, CurrencyCode, Quote } from '../types';
 
 function newLocalId(): string {
   return `local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -104,6 +104,9 @@ function QuoteFormInner({ quoteId, existingQuote }: QuoteFormInnerProps) {
   const create = useQuoteStore((s) => s.create);
   const update = useQuoteStore((s) => s.update);
   const send = useQuoteStore((s) => s.send);
+  const { company } = useCurrentCompany();
+  // Edición: la moneda con que se creó. Nueva: la del negocio (el servidor la fija igual al crear).
+  const quoteCurrency: CurrencyCode = existingQuote?.currency ?? (company?.currency === 'USD' ? 'USD' : 'NIO');
 
   const isEditMode = Boolean(quoteId);
 
@@ -280,6 +283,7 @@ function QuoteFormInner({ quoteId, existingQuote }: QuoteFormInnerProps) {
               canRemove={items.length > 1}
               onChange={updateItem}
               onRemove={removeItem}
+              currency={quoteCurrency}
             />
           ))}
         </div>
@@ -296,6 +300,7 @@ function QuoteFormInner({ quoteId, existingQuote }: QuoteFormInnerProps) {
         total={total}
         onDiscountChange={setDiscount}
         onTaxChange={setTax}
+        currency={quoteCurrency}
       />
 
       {/* Notas */}

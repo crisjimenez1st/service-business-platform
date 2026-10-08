@@ -1,3 +1,4 @@
+import type { CurrencyCode } from '../../types';
 import { Wrench } from 'lucide-react';
 import { Sheet, Button } from '../ui';
 import { formatCurrency } from '../../utils/currency';
@@ -9,6 +10,7 @@ interface JobDraftSheetProps {
   clientName: string | undefined;
   title: string;
   estimatedTotal: number;
+  currency: CurrencyCode;
 }
 
 /**
@@ -22,6 +24,7 @@ export default function JobDraftSheet({
   clientName,
   title,
   estimatedTotal,
+  currency,
 }: JobDraftSheetProps) {
   return (
     <Sheet
@@ -54,7 +57,7 @@ export default function JobDraftSheet({
         </div>
         <div className="flex justify-between">
           <span className="text-slate-500">Total</span>
-          <span className="font-semibold text-brand-700">{formatCurrency(estimatedTotal)}</span>
+          <span className="font-semibold text-brand-700">{formatCurrency(estimatedTotal, currency)}</span>
         </div>
       </div>
 

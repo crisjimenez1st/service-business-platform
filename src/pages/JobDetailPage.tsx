@@ -1,19 +1,29 @@
+import ScheduleFollowupSheet from '../components/followups/ScheduleFollowupSheet';
+import { createFollowup } from '../services/followupService';
+import { useTerms } from '../hooks/useTerms';
+import { useServiceRulesStore } from '../store/serviceRulesStore';
+import { findRuleForService } from '../services/serviceRulesService';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Calendar as CalendarIcon, Pencil, MapPin } from 'lucide-react';
 import { Badge, Button, ErrorState, Card } from '../components/ui';
 import JobStatusActions from '../components/jobs/JobStatusActions';
 import CancelJobModal from '../components/jobs/CancelJobModal';
+import JobPaymentsTab from '../components/payments/JobPaymentsTab';
 import AssignTechnicianSheet from '../components/calendar/AssignTechnicianSheet';
 import ScheduleJobSheet from '../components/calendar/ScheduleJobSheet';
+import { getAppointmentResponses } from '../services/appointmentService';
+import type { AppointmentResponse } from '../types';
 import { useCurrentCompany } from '../contexts/useCurrentCompany';
 import { useClientsById } from '../hooks/useClientsById';
 import { useJobStore } from '../store/jobStore';
 import * as jobService from '../services/jobService';
-import type { Job, CurrencyCode } from '../types';
+import type { Job } from '../types';
 import { JOB_STATUS_LABELS, JOB_STATUS_TONES } from '../utils/jobStatus';
 import { formatTimeInTimezone, formatLongDateInTimezone } from '../utils/timezone';
 import { formatCurrency } from '../utils/currency';
+import { getJobFinancials, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TONES } from '../utils/paymentStatus';
+import { formatCalendarDate } from '../utils/timezone';
 import { t } from '../i18n/es';
 
 type TabKey = 'summary' | 'service' | 'schedule' | 'evidence' | 'materials' | 'payments' | 'history';
@@ -31,17 +41,20 @@ type TabKey = 'summary' | 'service' | 'schedule' | 'evidence' | 'materials' | 'p
 export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { company } = useCurrentCompany();
   const companyId = company?.id;
   const timezone = company?.timezone ?? 'America/Managua';
-  const currency = (company?.currency ?? 'NIO') as CurrencyCode;
 
   const [job, setJob] = useState<Job | null | undefined>(undefined);
-  const [activeTab, setActiveTab] = useState<TabKey>('summary');
+  const [activeTab, setActiveTab] = useState<TabKey>(searchParams.get('tab') === 'payments' ? 'payments' : 'summary');
   const [assignOpen, setAssignOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [advancing, setAdvancing] = useState(false);
+  const [followupOpen, setFollowupOpen] = useState(false);
+  const [freedSlot, setFreedSlot] = useState<string | null>(null);
+  const [apptResponse, setApptResponse] = useState<AppointmentResponse | null>(null);
 
   const { clientsById } = useClientsById();
   const technicians = useJobStore((s) => s.technicians);
@@ -49,6 +62,9 @@ export default function JobDetailPage() {
   const assignTechnician = useJobStore((s) => s.assignTechnician);
   const scheduleJobAction = useJobStore((s) => s.schedule);
   const advanceStatus = useJobStore((s) => s.advanceStatus);
+  const terms = useTerms();
+  const serviceRules = useServiceRulesStore((s) => s.rules);
+  const loadServiceRules = useServiceRulesStore((s) => s.load);
   const cancel = useJobStore((s) => s.cancel);
 
   async function loadJob() {
@@ -61,6 +77,24 @@ export default function JobDetailPage() {
     loadJob();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId, id]);
+
+  useEffect(() => {
+    const canFollowUp = company?.role === 'owner' || company?.role === 'office';
+    if (companyId && canFollowUp && company?.businessType !== 'technical_services') loadServiceRules(companyId);
+  }, [companyId, company?.role, company?.businessType, loadServiceRules]);
+
+  const scheduledStartAt = job?.scheduledStartAt;
+  useEffect(() => {
+    if (!companyId || !id || !scheduledStartAt) return;
+    let cancelled = false;
+    (async () => {
+      const r = await getAppointmentResponses(companyId, [id]);
+      if (!cancelled) setApptResponse(r.error ? null : (r.data[0] ?? null));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [companyId, id, scheduledStartAt]);
 
   useEffect(() => {
     if (companyId) loadTechnicians(companyId);
@@ -78,13 +112,28 @@ export default function JobDetailPage() {
     setAdvancing(true);
     const updated = await advanceStatus(job.id, newStatus);
     setAdvancing(false);
-    if (updated) setJob(updated);
+    if (updated) {
+      setJob(updated);
+      // Clínicas y similares: al terminar la cita se pregunta cuándo debe volver.
+      const canFollowUp = company?.role === 'owner' || company?.role === 'office';
+      if (newStatus === 'completed' && canFollowUp && company?.businessType !== 'technical_services') {
+        setFollowupOpen(true);
+      }
+    }
   }
 
   async function handleCancel(reason: string, category?: string) {
     if (!job) return false;
+    const slot = job.scheduledStartAt;
     const updated = await cancel(job.id, reason, category);
-    if (updated) setJob(updated);
+    if (updated) {
+      setJob(updated);
+      // Se liberó un espacio futuro: ofrecer avisar a la lista de espera.
+      const canOffer = company?.role === 'owner' || company?.role === 'office';
+      if (slot && new Date(slot).getTime() > Date.now() && canOffer && company?.businessType !== 'technical_services') {
+        setFreedSlot(slot);
+      }
+    }
     return updated !== null;
   }
 
@@ -95,6 +144,8 @@ export default function JobDetailPage() {
   if (job === null) {
     return <ErrorState message={t.jobDetail.notFound} onRetry={loadJob} />;
   }
+
+  const financials = getJobFinancials(job, timezone);
 
   const tabs: { key: TabKey; label: string }[] = [
     { key: 'summary', label: t.jobDetail.tabSummary },
@@ -127,6 +178,20 @@ export default function JobDetailPage() {
       {job.status !== 'completed' && job.status !== 'cancelled' && (
         <Card>
           <JobStatusActions job={job} onAdvance={handleAdvance} onCancel={() => setCancelOpen(true)} advancing={advancing} />
+        </Card>
+      )}
+
+      {job.status === 'cancelled' && freedSlot && (
+        <Card className="bg-brand-50 border-brand-200">
+          <p className="text-sm font-medium text-slate-900">Se liberó un espacio</p>
+          <p className="text-sm text-slate-600 mt-1">¿Quieres avisar a quienes están en la lista de espera?</p>
+          <Button
+            size="sm"
+            className="mt-3"
+            onClick={() => navigate(`/followups?tab=waitlist&slot=${encodeURIComponent(freedSlot)}`)}
+          >
+            Avisar a la lista de espera
+          </Button>
         </Card>
       )}
 
@@ -176,21 +241,44 @@ export default function JobDetailPage() {
                 {formatLongDateInTimezone(job.scheduledStartAt, timezone)} · {formatTimeInTimezone(job.scheduledStartAt, timezone)}
               </p>
               <p className="text-sm text-slate-600 mt-1">{technicianName ?? t.calendar.unassigned}</p>
+              {apptResponse?.response && (
+                <div className="mt-2">
+                  <Badge tone={apptResponse.response === 'confirmed' ? 'success' : 'warning'}>
+                    {apptResponse.response === 'confirmed'
+                      ? apptResponse.responseSource === 'patient' ? 'Confirmó su cita' : 'Cita confirmada'
+                      : apptResponse.responseSource === 'patient' ? 'Avisó que no podrá asistir' : 'No podrá asistir'}
+                  </Badge>
+                </div>
+              )}
             </Card>
           )}
-          {(job.total !== undefined || job.paidAmount !== undefined) && (
+          {financials.hasTotal && (
             <Card>
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">{t.jobDetail.total}</span>
-                <span className="font-medium text-slate-900">
-                  {job.total !== undefined ? formatCurrency(job.total, currency) : '—'}
-                </span>
+                <span className="font-medium text-slate-900">{formatCurrency(financials.total, job.currency)}</span>
               </div>
               <div className="flex justify-between text-sm mt-1">
                 <span className="text-slate-500">{t.jobDetail.paidAmount}</span>
-                <span className="font-medium text-slate-900">
-                  {job.paidAmount !== undefined ? formatCurrency(job.paidAmount, currency) : '—'}
-                </span>
+                <span className="font-medium text-slate-900">{formatCurrency(financials.paidAmount, job.currency)}</span>
+              </div>
+              <div className="flex justify-between text-sm mt-1">
+                <span className="text-slate-500">{t.jobDetail.balance}</span>
+                <span className="font-medium text-slate-900">{formatCurrency(financials.balance, job.currency)}</span>
+              </div>
+              {job.dueDate && (
+                <div className="flex justify-between text-sm mt-1">
+                  <span className="text-slate-500">{t.jobDetail.dueDate}</span>
+                  <span className={financials.isOverdue ? 'font-medium text-red-700' : 'text-slate-700'}>
+                    {formatCalendarDate(job.dueDate)}
+                  </span>
+                </div>
+              )}
+              <div className="flex flex-wrap gap-2 mt-3">
+                <Badge tone={PAYMENT_STATUS_TONES[financials.paymentStatus]}>
+                  {PAYMENT_STATUS_LABELS[financials.paymentStatus]}
+                </Badge>
+                {financials.isOverdue && <Badge tone="danger">{t.payments.overdueBadge}</Badge>}
               </div>
             </Card>
           )}
@@ -250,7 +338,9 @@ export default function JobDetailPage() {
         </div>
       )}
 
-      {(activeTab === 'evidence' || activeTab === 'materials' || activeTab === 'payments' || activeTab === 'history') && (
+      {activeTab === 'payments' && <JobPaymentsTab job={job} timezone={timezone} onJobChange={setJob} />}
+
+      {(activeTab === 'evidence' || activeTab === 'materials' || activeTab === 'history') && (
         <Card>
           <p className="text-sm text-slate-500 text-center py-6">{t.jobDetail.comingSoon}</p>
         </Card>
@@ -285,6 +375,23 @@ export default function JobDetailPage() {
       />
 
       <CancelJobModal open={cancelOpen} onClose={() => setCancelOpen(false)} onConfirm={handleCancel} />
+      {followupOpen && (
+        <ScheduleFollowupSheet
+          open
+          question={terms.whenReturn}
+          timezone={timezone}
+          suggestion={(() => {
+            const rule = findRuleForService(serviceRules, job.serviceType);
+            return rule ? { serviceName: rule.serviceName, months: rule.months, reason: rule.reason } : undefined;
+          })()}
+          onClose={() => setFollowupOpen(false)}
+          onSave={async (f) => {
+            if (!companyId) return false;
+            const result = await createFollowup(companyId, { clientId: job.clientId, ...f });
+            return !result.error;
+          }}
+        />
+      )}
     </div>
   );
 }

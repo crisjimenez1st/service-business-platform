@@ -57,6 +57,7 @@ export interface Database {
           currency: string;
           logo_url: string | null;
           timezone: string;
+          business_type: string;
           created_at: string;
           updated_at: string;
         };
@@ -132,6 +133,7 @@ export interface Database {
           email: string | null;
           address: string | null;
           notes: string | null;
+          contact_consent: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -144,6 +146,7 @@ export interface Database {
           email?: string | null;
           address?: string | null;
           notes?: string | null;
+          contact_consent?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -348,6 +351,8 @@ export interface Database {
           maps_url: string | null;
           total: number | null;
           paid_amount: number | null;
+          currency: string;
+          due_date: string | null;
           cancellation_reason: string | null;
           cancellation_category: string | null;
           cancelled_at: string | null;
@@ -372,6 +377,8 @@ export interface Database {
           maps_url?: string | null;
           total?: number | null;
           paid_amount?: number | null;
+          currency?: string;
+          due_date?: string | null;
           cancellation_reason?: string | null;
           cancellation_category?: string | null;
           cancelled_at?: string | null;
@@ -380,6 +387,84 @@ export interface Database {
           updated_at?: string;
         };
         Update: Partial<Database['public']['Tables']['jobs']['Insert']>;
+        Relationships: [];
+      };
+
+      service_followup_rules: {
+        Row: {
+          id: string;
+          company_id: string;
+          service_name: string;
+          service_key: string;
+          months: number;
+          reason: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          service_name: string;
+          months: number;
+          reason?: string | null;
+        };
+        Update: { service_name?: string; months?: number; reason?: string | null };
+        Relationships: [];
+      };
+
+      /** Solo lectura desde el cliente: escribir pasa por add_to_waitlist / resolve_waitlist_entry. */
+      waitlist_entries: {
+        Row: {
+          id: string;
+          company_id: string;
+          client_id: string;
+          note: string | null;
+          service: string | null;
+          status: string;
+          created_at: string;
+          resolved_at: string | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+
+      /** Solo lectura (owner/office): escribir pasa por las RPCs de recordatorio de cita. */
+      appointment_responses: {
+        Row: {
+          job_id: string;
+          company_id: string;
+          token: string;
+          response: string | null;
+          response_at: string | null;
+          response_source: string | null;
+          reminded_at: string | null;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+
+      payments: {
+        Row: {
+          id: string;
+          company_id: string;
+          job_id: string;
+          amount: number;
+          payment_type: string;
+          method: string;
+          paid_at: string;
+          reference: string | null;
+          note: string | null;
+          recorded_by: string | null;
+          voided_at: string | null;
+          voided_by: string | null;
+          void_reason: string | null;
+          created_at: string;
+        };
+        /** Solo lectura desde el cliente: escribir pasa siempre por record_payment/void_payment. */
+        Insert: never;
+        Update: never;
         Relationships: [];
       };
 
@@ -472,8 +557,95 @@ export interface Database {
     Views: Record<string, never>;
     Functions: {
       create_company_for_current_user: {
-        Args: { p_company_name: string };
+        Args: { p_company_name: string; p_business_type?: string };
         Returns: string;
+      };
+      set_company_business_type: {
+        Args: { p_company_id: string; p_business_type: string };
+        Returns: Database['public']['Tables']['companies']['Row'];
+      };
+      get_followups_due: {
+        Args: { p_company_id: string };
+        Returns: {
+          opportunity_id: string;
+          client_id: string;
+          client_name: string;
+          client_phone: string;
+          client_whatsapp: string | null;
+          category: string;
+          title: string;
+          reason: string | null;
+          status: string;
+          due_date: string;
+          days_overdue: number;
+          last_contacted_at: string | null;
+          last_visit_at: string | null;
+        }[];
+      };
+      get_inactive_clients: {
+        Args: { p_company_id: string; p_months?: number };
+        Returns: {
+          client_id: string;
+          client_name: string;
+          client_phone: string;
+          client_whatsapp: string | null;
+          last_visit_at: string;
+          days_since_visit: number;
+        }[];
+      };
+      resolve_inactive_client: {
+        Args: { p_company_id: string; p_client_id: string; p_action: string; p_date?: string | null };
+        Returns: string;
+      };
+      add_to_waitlist: {
+        Args: { p_company_id: string; p_client_id: string; p_note?: string | null; p_service?: string | null };
+        Returns: string;
+      };
+      resolve_waitlist_entry: {
+        Args: { p_entry_id: string; p_status: string };
+        Returns: undefined;
+      };
+      prepare_appointment_link: {
+        Args: { p_job_id: string };
+        Returns: string;
+      };
+      mark_appointment_reminded: {
+        Args: { p_job_id: string };
+        Returns: undefined;
+      };
+      set_appointment_response: {
+        Args: { p_job_id: string; p_response: string | null };
+        Returns: undefined;
+      };
+      get_public_appointment: {
+        Args: { p_token: string };
+        Returns: {
+          company_name: string;
+          company_logo_url: string | null;
+          company_phone: string | null;
+          client_first_name: string;
+          scheduled_start_at: string;
+          timezone: string;
+          response: string | null;
+          can_respond: boolean;
+        }[];
+      };
+      respond_public_appointment: {
+        Args: { p_token: string; p_response: string };
+        Returns: string;
+      };
+      create_client_with_followup: {
+        Args: {
+          p_company_id: string;
+          p_name: string;
+          p_phone: string;
+          p_whatsapp?: string | null;
+          p_contact_consent?: boolean;
+          p_followup_due_date?: string | null;
+          p_followup_title?: string | null;
+          p_followup_reason?: string | null;
+        };
+        Returns: Database['public']['Tables']['clients']['Row'];
       };
       create_quote_from_opportunity: {
         Args: {
@@ -615,6 +787,18 @@ export interface Database {
         Args: { p_job_id: string; p_technician_id?: string | null };
         Returns: Database['public']['Tables']['jobs']['Row'];
       };
+      create_appointment: {
+        Args: {
+          p_company_id: string;
+          p_client_id: string;
+          p_service: string;
+          p_scheduled_start_at: string;
+          p_scheduled_end_at?: string | null;
+          p_total?: number | null;
+          p_notes?: string | null;
+        };
+        Returns: Database['public']['Tables']['jobs']['Row'];
+      };
       schedule_job: {
         Args: { p_job_id: string; p_scheduled_start_at?: string | null; p_scheduled_end_at?: string | null };
         Returns: Database['public']['Tables']['jobs']['Row'];
@@ -626,6 +810,81 @@ export interface Database {
       cancel_job: {
         Args: { p_job_id: string; p_reason: string; p_category?: string | null };
         Returns: Database['public']['Tables']['jobs']['Row'];
+      };
+      set_job_financial_terms: {
+        Args: { p_job_id: string; p_total: number; p_due_date?: string | null };
+        Returns: Database['public']['Tables']['jobs']['Row'];
+      };
+      record_payment: {
+        Args: {
+          p_job_id: string;
+          p_amount: number;
+          p_payment_type: string;
+          p_method: string;
+          p_paid_at?: string;
+          p_reference?: string | null;
+          p_note?: string | null;
+        };
+        Returns: Database['public']['Tables']['jobs']['Row'];
+      };
+      void_payment: {
+        Args: { p_payment_id: string; p_void_reason: string };
+        Returns: Database['public']['Tables']['jobs']['Row'];
+      };
+      get_job_payments: {
+        Args: { p_job_id: string };
+        Returns: {
+          id: string;
+          amount: number;
+          payment_type: string;
+          method: string;
+          paid_at: string;
+          reference: string | null;
+          note: string | null;
+          recorded_by: string | null;
+          voided_at: string | null;
+          voided_by: string | null;
+          void_reason: string | null;
+          created_at: string;
+        }[];
+      };
+      get_company_receivables: {
+        Args: { p_company_id: string };
+        Returns: {
+          job_id: string;
+          client_id: string;
+          client_name: string;
+          service_type: string;
+          status: string;
+          total: number;
+          paid_amount: number;
+          balance: number;
+          currency: string;
+          due_date: string | null;
+          payment_status: string;
+          is_overdue: boolean;
+          requires_review: boolean;
+        }[];
+      };
+      get_receivables_summary: {
+        Args: { p_company_id: string };
+        Returns: {
+          currency: string;
+          outstanding: number;
+          overdue_amount: number;
+          overdue_count: number;
+          open_count: number;
+        }[];
+      };
+      get_unpriced_jobs: {
+        Args: { p_company_id: string };
+        Returns: {
+          job_id: string;
+          client_id: string;
+          client_name: string;
+          service_type: string;
+          updated_at: string;
+        }[];
       };
       advance_job_status: {
         Args: { p_job_id: string; p_new_status: string };

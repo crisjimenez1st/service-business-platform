@@ -25,6 +25,13 @@ export interface Company {
 
 export type CurrencyCode = 'NIO' | 'USD';
 
+/**
+ * Tipo de negocio de la empresa (companies.business_type, migración 014).
+ * Solo decide el LENGUAJE y el menú de la app (ver i18n/businessTerms.ts),
+ * nunca el esquema de datos.
+ */
+export type BusinessType = 'dental' | 'medical' | 'technical_services' | 'other';
+
 export interface User {
   id: UUID;
   companyId: UUID;
@@ -53,6 +60,8 @@ export interface Client {
   address: string;
   mapsUrl?: string;
   notes?: string;
+  /** El cliente/paciente acepta recibir recordatorios (clients.contact_consent). false = no contactar. */
+  contactConsent?: boolean;
   createdAt: string;
   /** Campos calculados server-side en el futuro; aquí derivados en services/ */
   totalBilled?: number;
