@@ -35,7 +35,7 @@ export default function Sidebar() {
   const initial = displayName.charAt(0).toUpperCase();
 
   return (
-    <aside className="hidden md:flex md:flex-col md:w-[84px] lg:w-64 shrink-0 border-r border-slate-200 bg-white h-screen sticky top-0">
+    <aside className="hidden md:flex md:flex-col md:w-[84px] lg:w-64 shrink-0 border-r border-slate-200 bg-white h-screen sticky top-0 z-30">
       <div className="flex items-center gap-2.5 px-4 py-5 border-b border-slate-100">
         <OneFlowMark size={36} className="shrink-0" />
         <span className="hidden lg:block font-semibold text-slate-900 truncate">
