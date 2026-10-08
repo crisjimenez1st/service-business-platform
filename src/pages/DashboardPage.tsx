@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { DollarSign, Clock, Briefcase, TrendingUp, FileText, Wallet, BellRing, ChevronRight } from 'lucide-react';
+import ClinicHome from '../components/dashboard/ClinicHome';
 import MetricCard from '../components/dashboard/MetricCard';
 import TodayJobCard from '../components/dashboard/TodayJobCard';
 import OpportunityCard from '../components/dashboard/OpportunityCard';
@@ -25,6 +26,14 @@ import { formatCurrency } from '../utils/currency';
 import { t } from '../i18n/es';
 
 export default function DashboardPage() {
+  const { company } = useCurrentCompany();
+  // En una clínica, los doctores (rol técnico) ven su agenda del día, no el inicio de recepción.
+  if (company?.businessType !== 'technical_services' && company?.role === 'technician') return <Navigate to="/calendar" replace />;
+  if (company && company.businessType !== 'technical_services') return <ClinicHome />;
+  return <TechnicalDashboard />;
+}
+
+function TechnicalDashboard() {
   const navigate = useNavigate();
   const { company } = useCurrentCompany();
   const companyId = company?.id;
