@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, CalendarCheck, MapPin, MessageCircle, Pencil, Phone } from 'lucide-react';
 import { Badge, Card, EmptyState, ErrorState } from '../ui';
 import EditClientSheet from '../clients/EditClientSheet';
 import Tabs from '../clients/Tabs';
 import MedicalAlert from './MedicalAlert';
+import PlansPanel from '../plans/PlansPanel';
 import MedicalProfileCard from './MedicalProfileCard';
 import { getMedicalProfile } from '../../services/medicalProfileService';
 import { useCurrentCompany } from '../../contexts/useCurrentCompany';
@@ -19,7 +20,7 @@ import { formatLongDateInTimezone, formatTimeInTimezone } from '../../utils/time
 import { t } from '../../i18n/es';
 import type { CurrencyCode, Job, MedicalProfile, VisitRecord } from '../../types';
 
-type PatientTab = 'summary' | 'history' | 'treatments' | 'medical';
+type PatientTab = 'summary' | 'history' | 'treatments' | 'plans' | 'medical';
 
 /**
  * Ficha del paciente (clínicas): quién es, cuándo viene, qué se le ha hecho
@@ -43,7 +44,8 @@ export default function ClinicPatientProfile() {
 
   const [jobs, setJobs] = useState<Job[] | null>(null);
   const canSeeClinical = company?.role === 'owner' || company?.role === 'technician';
-  const [tab, setTab] = useState<PatientTab>('summary');
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState<PatientTab>(searchParams.get('tab') === 'plans' ? 'plans' : 'summary');
   const [medical, setMedical] = useState<MedicalProfile | null>(null);
   const [records, setRecords] = useState<Record<string, VisitRecord>>({});
   const [editOpen, setEditOpen] = useState(false);
@@ -94,6 +96,7 @@ export default function ClinicPatientProfile() {
     { key: 'summary', label: 'Resumen' },
     { key: 'history', label: 'Historial de citas' },
     { key: 'treatments', label: 'Tratamientos' },
+    ...(canSeeMoney ? [{ key: 'plans', label: 'Plan de tratamiento' }] : []),
     ...(canSeeClinical ? [{ key: 'medical', label: 'Historial médico' }] : []),
   ];
 
@@ -290,6 +293,15 @@ export default function ClinicPatientProfile() {
                 ))}
               </ol>
             </section>
+          )}
+
+          {tab === 'plans' && canSeeMoney && companyId && (
+            <PlansPanel
+              companyId={companyId}
+              clientId={client.id}
+              currency={company?.currency === 'USD' ? 'USD' : 'NIO'}
+              timezone={timezone}
+            />
           )}
 
           {tab === 'medical' && canSeeClinical && (

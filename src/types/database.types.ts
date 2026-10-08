@@ -430,6 +430,46 @@ export interface Database {
         Relationships: [];
       };
 
+      /** Solo lectura (owner/office): escribir pasa por las RPCs de planes de tratamiento. */
+      treatment_plans: {
+        Row: {
+          id: string;
+          company_id: string;
+          client_id: string;
+          name: string;
+          description: string | null;
+          total: number;
+          paid_amount: number;
+          currency: string;
+          status: string;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      plan_payments: {
+        Row: {
+          id: string;
+          plan_id: string;
+          company_id: string;
+          amount: number;
+          method: string;
+          paid_at: string;
+          note: string | null;
+          recorded_by: string | null;
+          voided_at: string | null;
+          voided_by: string | null;
+          void_reason: string | null;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+
       /** Solo lectura (owner/doctor): escribir pasa por save_patient_medical_profile. */
       patient_medical_profiles: {
         Row: {
@@ -838,6 +878,30 @@ export interface Database {
           p_notes?: string | null;
         };
         Returns: Database['public']['Tables']['jobs']['Row'];
+      };
+      create_treatment_plan: {
+        Args: {
+          p_company_id: string;
+          p_client_id: string;
+          p_name: string;
+          p_total: number;
+          p_description?: string | null;
+          p_initial_payment?: number | null;
+          p_method?: string;
+        };
+        Returns: Database['public']['Tables']['treatment_plans']['Row'];
+      };
+      record_plan_payment: {
+        Args: { p_plan_id: string; p_amount: number; p_method?: string; p_paid_at?: string; p_note?: string | null };
+        Returns: Database['public']['Tables']['treatment_plans']['Row'];
+      };
+      void_plan_payment: {
+        Args: { p_payment_id: string; p_void_reason: string };
+        Returns: Database['public']['Tables']['treatment_plans']['Row'];
+      };
+      set_treatment_plan_status: {
+        Args: { p_plan_id: string; p_status: string };
+        Returns: Database['public']['Tables']['treatment_plans']['Row'];
       };
       save_patient_medical_profile: {
         Args: {
