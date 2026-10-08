@@ -6,6 +6,8 @@ import ServiceRulesCard from '../components/settings/ServiceRulesCard';
 import { useCurrentCompany } from '../contexts/useCurrentCompany';
 import { setBusinessType, setCompanyCurrency } from '../services/companySetupService';
 import type { BusinessType, CurrencyCode } from '../types';
+import { PLAN_PRICE_USD, TRIAL_DAYS, getPlanState } from '../config/plan';
+import { formatLongDateInTimezone } from '../utils/timezone';
 import { t } from '../i18n/es';
 
 /** Configuración mínima: tipo de negocio (solo owner). Cambiarlo solo cambia el lenguaje y el menú; no toca datos. */
@@ -108,6 +110,27 @@ export default function SettingsPage() {
           </Button>
         )}
       </Card>
+
+      {isOwner && (() => {
+        const plan = getPlanState(company.trialEndsAt, company.paidUntil);
+        return (
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-slate-900">Tu plan</h2>
+            <Card>
+              <p className="text-sm font-medium text-slate-900">
+                {plan.kind === 'paid' && company.paidUntil
+                  ? `Plan activo hasta el ${formatLongDateInTimezone(company.paidUntil, company.timezone)}`
+                  : plan.kind === 'trial'
+                    ? `Prueba gratis: te quedan ${plan.daysLeft} ${plan.daysLeft === 1 ? 'día' : 'días'}`
+                    : 'Tu prueba gratis terminó'}
+              </p>
+              <p className="text-sm text-slate-500 mt-1">
+                Plan único: US${PLAN_PRICE_USD} al mes. El primer mes es gratis ({TRIAL_DAYS} días). Todo lo que ya registraste se conserva.
+              </p>
+            </Card>
+          </section>
+        );
+      })()}
 
       {(isOwner || company.role === 'office') && company.businessType !== 'technical_services' && (
         <section className="space-y-2">

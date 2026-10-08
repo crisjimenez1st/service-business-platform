@@ -58,6 +58,8 @@ export interface Database {
           logo_url: string | null;
           timezone: string;
           business_type: string;
+          trial_ends_at: string;
+          paid_until: string | null;
           created_at: string;
           updated_at: string;
         };
