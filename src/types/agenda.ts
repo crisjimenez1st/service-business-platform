@@ -60,3 +60,17 @@ export interface PublicReceipt {
   receiptCode: string;
   voided: boolean;
 }
+
+/** Registro clínico de una atención (visit_records, migración 020). Solo dueño y doctores. */
+export interface VisitRecord {
+  jobId: string;
+  clientId: string;
+  reason?: string;
+  diagnosis?: string;
+  treatment?: string;
+  prescription?: string;
+  nextSteps?: string;
+  updatedAt: string;
+}
+
+export type VisitRecordInput = Omit<VisitRecord, 'jobId' | 'clientId' | 'updatedAt'>;

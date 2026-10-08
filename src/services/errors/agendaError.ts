@@ -17,6 +17,8 @@ const BUSINESS_ERRORS: { match: string; message: string }[] = [
   { match: 'precio debe ser', message: 'El precio debe ser mayor a cero (o déjalo vacío).' },
   { match: 'no pertenece a esta empresa', message: 'Esa persona no pertenece a este negocio.' },
   { match: 'demasiado largo', message: 'El nombre del servicio es demasiado largo.' },
+  { match: 'No autorizado para registrar atenciones', message: 'Solo el médico o el dueño pueden registrar la atención.' },
+  { match: 'no admite registro clínico', message: 'Una cita cancelada no lleva registro de atención.' },
   { match: 'No autorizado', message: 'No tienes permiso para realizar esta acción.' },
   { match: 'No autenticado', message: 'Tu sesión expiró. Vuelve a iniciar sesión.' },
 ];

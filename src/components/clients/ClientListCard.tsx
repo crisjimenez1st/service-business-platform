@@ -5,6 +5,7 @@ import { Card, Badge } from '../ui';
 import type { Client } from '../../types';
 import { formatRelativeToToday } from '../../utils/dates';
 import { t } from '../../i18n/es';
+import { useCurrentCompany } from '../../contexts/useCurrentCompany';
 
 interface ClientListCardProps {
   client: Client;
@@ -14,6 +15,8 @@ interface ClientListCardProps {
 export default function ClientListCard({ client, hasOpportunity }: ClientListCardProps) {
   const money = useMoney();
   const navigate = useNavigate();
+  const { company } = useCurrentCompany();
+  const isClinic = company?.businessType !== 'technical_services';
   const hasBalance = (client.pendingBalance ?? 0) > 0;
 
   return (
@@ -29,12 +32,14 @@ export default function ClientListCard({ client, hasOpportunity }: ClientListCar
               <Phone size={13} className="shrink-0" />
               <span className="truncate">{client.phone}</span>
             </div>
-            <div className="flex items-center gap-1 text-sm text-slate-500 mt-0.5">
-              <MapPin size={13} className="shrink-0" />
-              <span className="truncate">{client.address}</span>
-            </div>
+            {client.address && (
+              <div className="flex items-center gap-1 text-sm text-slate-500 mt-0.5">
+                <MapPin size={13} className="shrink-0" />
+                <span className="truncate">{client.address}</span>
+              </div>
+            )}
           </div>
-          {hasOpportunity && <Badge tone="brand">Oportunidad</Badge>}
+          {hasOpportunity && !isClinic && <Badge tone="brand">Oportunidad</Badge>}
         </div>
 
         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 pt-3 border-t border-slate-100 text-sm">
