@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Plus, Pencil } from 'lucide-react';
+import { Plus, Pencil, MessageCircle } from 'lucide-react';
 import { Badge, Button, Card, ErrorState } from '../ui';
 import RecordPaymentSheet, { type RecordPaymentValues } from './RecordPaymentSheet';
 import VoidPaymentModal from './VoidPaymentModal';
+import WhatsAppFollowupSheet from '../followups/WhatsAppFollowupSheet';
+import { useCurrentCompany } from '../../contexts/useCurrentCompany';
+import { preparePaymentReceipt, buildReceiptLink } from '../../services/receiptService';
+import { receiptMessage } from '../../i18n/businessTerms';
+import { buildWhatsAppLink, toWhatsAppNumber } from '../../utils/whatsapp';
 import EditFinancialTermsSheet from './EditFinancialTermsSheet';
 import * as paymentService from '../../services/paymentService';
 import type { CurrencyCode, Job, Payment } from '../../types';
@@ -20,6 +25,8 @@ import { t } from '../../i18n/es';
 interface JobPaymentsTabProps {
   job: Job;
   timezone: string;
+  /** Paciente del trabajo, para enviarle el recibo por WhatsApp. */
+  client?: { name: string; phone: string; whatsapp?: string };
   /** Se llama con el Job actualizado (paid_amount recalculado por el servidor) tras registrar/anular/editar. */
   onJobChange: (job: Job) => void;
 }
@@ -32,7 +39,8 @@ interface JobPaymentsTabProps {
  * cuenta: toda mutación pasa por paymentService y el Job que vuelve
  * del servidor es el que se muestra.
  */
-export default function JobPaymentsTab({ job, timezone, onJobChange }: JobPaymentsTabProps) {
+export default function JobPaymentsTab({ job, timezone, client, onJobChange }: JobPaymentsTabProps) {
+  const { company } = useCurrentCompany();
   const currency: CurrencyCode = job.currency;
   const financials = useMemo(() => getJobFinancials(job, timezone), [job, timezone]);
 
@@ -43,6 +51,21 @@ export default function JobPaymentsTab({ job, timezone, onJobChange }: JobPaymen
   const [termsOpen, setTermsOpen] = useState(false);
   const [termsKey, setTermsKey] = useState(0);
   const [voidTarget, setVoidTarget] = useState<Payment | null>(null);
+  const [receiptFor, setReceiptFor] = useState<{ payment: Payment; link: string } | null>(null);
+  const [receiptBusy, setReceiptBusy] = useState<string | null>(null);
+  const [receiptError, setReceiptError] = useState<string | null>(null);
+
+  async function startReceipt(payment: Payment) {
+    setReceiptBusy(payment.id);
+    setReceiptError(null);
+    const result = await preparePaymentReceipt(payment.id);
+    setReceiptBusy(null);
+    if (result.error) {
+      setReceiptError(result.error.message);
+      return;
+    }
+    setReceiptFor({ payment, link: buildReceiptLink(result.data) });
+  }
 
   const loadPayments = useCallback(async () => {
     const result = await paymentService.getJobPayments(job.id);
@@ -220,9 +243,22 @@ export default function JobPaymentsTab({ job, timezone, onJobChange }: JobPaymen
                     {voided ? (
                       <Badge tone="neutral">{t.payments.voidedBadge}</Badge>
                     ) : (
-                      <Button variant="ghost" size="sm" onClick={() => setVoidTarget(payment)}>
-                        {t.payments.voidPayment}
-                      </Button>
+                      <div className="flex flex-col items-end gap-1">
+                        {client && (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            icon={<MessageCircle size={14} />}
+                            disabled={receiptBusy === payment.id}
+                            onClick={() => startReceipt(payment)}
+                          >
+                            Enviar recibo
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="sm" onClick={() => setVoidTarget(payment)}>
+                          {t.payments.voidPayment}
+                        </Button>
+                      </div>
                     )}
                   </div>
                   {voided && payment.voidReason && (
@@ -236,6 +272,32 @@ export default function JobPaymentsTab({ job, timezone, onJobChange }: JobPaymen
           </div>
         )}
       </div>
+
+      {receiptError && (
+        <p role="alert" className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
+          {receiptError}
+        </p>
+      )}
+
+      {receiptFor && client && (
+        <WhatsAppFollowupSheet
+          key={receiptFor.payment.id}
+          open
+          clientName={client.name}
+          initialMessage={receiptMessage(
+            client.name,
+            company?.name ?? '',
+            formatCurrency(receiptFor.payment.amount, currency),
+            receiptFor.link
+          )}
+          onClose={() => setReceiptFor(null)}
+          onSend={(message) => {
+            const number = toWhatsAppNumber(client.whatsapp || client.phone, timezone);
+            window.open(buildWhatsAppLink(number, message), '_blank', 'noopener,noreferrer');
+            setReceiptFor(null);
+          }}
+        />
+      )}
 
       <RecordPaymentSheet
         key={`record-${recordKey}`}

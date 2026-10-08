@@ -41,3 +41,22 @@ export interface PublicAppointment {
   response?: AppointmentResponseValue;
   canRespond: boolean;
 }
+
+/** Recibo público de un pago (get_public_receipt, migración 019). */
+export interface PublicReceipt {
+  companyName: string;
+  companyLogoUrl?: string;
+  companyPhone?: string;
+  clientFirstName: string;
+  serviceName: string;
+  /** Ausente si el pago fue anulado. */
+  amount?: number;
+  currency: 'NIO' | 'USD';
+  method: string;
+  paidAt: string;
+  timezone: string;
+  jobTotal?: number;
+  balance?: number;
+  receiptCode: string;
+  voided: boolean;
+}

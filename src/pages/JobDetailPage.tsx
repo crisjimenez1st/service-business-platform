@@ -338,7 +338,12 @@ export default function JobDetailPage() {
         </div>
       )}
 
-      {activeTab === 'payments' && <JobPaymentsTab job={job} timezone={timezone} onJobChange={setJob} />}
+      {activeTab === 'payments' && <JobPaymentsTab
+          job={job}
+          timezone={timezone}
+          client={client ? { name: client.name, phone: client.phone, whatsapp: client.whatsapp } : undefined}
+          onJobChange={setJob}
+        />}
 
       {(activeTab === 'evidence' || activeTab === 'materials' || activeTab === 'history') && (
         <Card>

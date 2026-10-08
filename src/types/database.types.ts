@@ -801,6 +801,29 @@ export interface Database {
         };
         Returns: Database['public']['Tables']['jobs']['Row'];
       };
+      prepare_payment_receipt: {
+        Args: { p_payment_id: string };
+        Returns: string;
+      };
+      get_public_receipt: {
+        Args: { p_token: string };
+        Returns: {
+          company_name: string;
+          company_logo_url: string | null;
+          company_phone: string | null;
+          client_first_name: string;
+          service_name: string;
+          amount: number | null;
+          currency: string;
+          method: string;
+          paid_at: string;
+          timezone: string;
+          job_total: number | null;
+          balance: number | null;
+          receipt_code: string;
+          voided: boolean;
+        }[];
+      };
       schedule_job: {
         Args: { p_job_id: string; p_scheduled_start_at?: string | null; p_scheduled_end_at?: string | null };
         Returns: Database['public']['Tables']['jobs']['Row'];

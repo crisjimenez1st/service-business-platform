@@ -167,3 +167,9 @@ export function waitlistMessage(
   const when = slotText ? ` ${slotText}` : '';
   return `Hola ${firstName}, te escribimos de ${companyName}. Se liberó un espacio para ${service ? `tu ${service.toLowerCase()}` : `una ${what}`}${when}. ¿Te interesa tomarlo?`;
 }
+
+/** Mensaje para enviar el recibo de un pago por WhatsApp (con el enlace al recibo y su PDF). */
+export function receiptMessage(clientName: string, companyName: string, amountText: string, link: string): string {
+  const firstName = clientName.trim().split(/\s+/)[0] || clientName;
+  return `Hola ${firstName}, te escribimos de ${companyName}. Gracias por tu pago de ${amountText}. Aquí está tu recibo (puedes descargarlo en PDF): ${link}`;
+}

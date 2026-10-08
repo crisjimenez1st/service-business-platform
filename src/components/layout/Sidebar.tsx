@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import OneFlowMark from '../brand/OneFlowMark';
@@ -19,9 +20,11 @@ export default function Sidebar() {
 
   const linkClasses = ({ isActive }: { isActive: boolean }) =>
     [
-      'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
+      'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium',
+      'transition-all duration-200 ease-out motion-reduce:transition-none',
+      'hover:bg-brand-50 hover:text-brand-700 hover:translate-x-0.5 motion-reduce:hover:translate-x-0',
       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
-      isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100',
+      isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-600',
     ].join(' ');
 
   // Nota: user.email siempre existe con auth por email+password; el
@@ -40,19 +43,17 @@ export default function Sidebar() {
         </span>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+      <nav className="flex-1 md:overflow-visible lg:overflow-y-auto px-3 py-4 space-y-1">
         {primary.map((item) => (
           <NavLink key={item.path} to={item.path} className={linkClasses}>
-            <item.icon size={20} className="shrink-0" />
-            <span className="hidden lg:block truncate">{item.label}</span>
+            <NavContent icon={<item.icon size={20} className="shrink-0 transition-transform duration-200 group-hover:scale-110 motion-reduce:transform-none" />} label={item.label} />
           </NavLink>
         ))}
 
         <div className="pt-3 mt-3 border-t border-slate-100 space-y-1">
           {secondary.map((item) => (
             <NavLink key={item.path} to={item.path} className={linkClasses}>
-              <item.icon size={20} className="shrink-0" />
-              <span className="hidden lg:block truncate">{item.label}</span>
+              <NavContent icon={<item.icon size={20} className="shrink-0 transition-transform duration-200 group-hover:scale-110 motion-reduce:transform-none" />} label={item.label} />
             </NavLink>
           ))}
         </div>
@@ -70,12 +71,27 @@ export default function Sidebar() {
         </div>
         <button
           onClick={signOut}
-          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-100 w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          className="group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 w-full transition-all duration-200 ease-out motion-reduce:transition-none hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         >
-          <LogOut size={20} className="shrink-0" />
-          <span className="hidden lg:block">{t.nav.logout}</span>
+          <NavContent icon={<LogOut size={20} className="shrink-0 transition-transform duration-200 group-hover:scale-110 motion-reduce:transform-none" />} label={t.nav.logout} />
         </button>
       </div>
     </aside>
+  );
+}
+
+/** Icono + etiqueta. En el rail angosto (sin etiqueta visible) la etiqueta aparece como globo al pasar el mouse o enfocar. */
+function NavContent({ icon, label }: { icon: ReactNode; label: string }) {
+  return (
+    <>
+      {icon}
+      <span className="hidden lg:block truncate">{label}</span>
+      <span
+        aria-hidden="true"
+        className="lg:hidden pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 -translate-x-1 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 motion-reduce:transition-none"
+      >
+        {label}
+      </span>
+    </>
   );
 }
