@@ -40,10 +40,10 @@ export default function MonthView({ anchorDate, jobs, clientsById, timezone, onS
   const todayKey = getDayKeyInTimezone(new Date().toISOString(), timezone);
 
   return (
-    <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white">
-      <div className="grid grid-cols-7 bg-slate-50 border-b border-slate-200">
+    <div className="border border-slate-200 rounded-3xl overflow-hidden bg-white shadow-sm">
+      <div className="grid grid-cols-7 bg-slate-50/80 border-b border-slate-200">
         {WEEKDAY_LABELS.map((label) => (
-          <div key={label} className="px-2 py-2 text-xs font-semibold text-slate-500 text-center">
+          <div key={label} className="px-2 py-3 text-xs sm:text-sm font-semibold uppercase tracking-wide text-slate-500 text-center">
             {label}
           </div>
         ))}
@@ -62,20 +62,21 @@ export default function MonthView({ anchorDate, jobs, clientsById, timezone, onS
               key={key}
               onClick={() => onSelectDay(day)}
               className={[
-                'min-h-24 sm:min-h-28 border-b border-r border-slate-100 p-1.5 text-left flex flex-col gap-1',
+                'min-h-28 sm:min-h-36 border-b border-r border-slate-100 p-2 text-left flex flex-col gap-1.5 transition-colors',
+                'hover:bg-brand-50/60',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500',
-                isCurrentMonth ? 'bg-white' : 'bg-slate-50',
+                isToday ? 'bg-brand-50/50' : isCurrentMonth ? 'bg-white' : 'bg-slate-50/70',
               ].join(' ')}
             >
               <span
                 className={[
-                  'text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full shrink-0',
-                  isToday ? 'bg-brand-600 text-white' : isCurrentMonth ? 'text-slate-700' : 'text-slate-400',
+                  'text-base sm:text-lg font-semibold w-9 h-9 flex items-center justify-center rounded-full shrink-0 tabular-nums',
+                  isToday ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30' : isCurrentMonth ? 'text-slate-800' : 'text-slate-300',
                 ].join(' ')}
               >
                 {day.getDate()}
               </span>
-              <div className="flex-1 flex flex-col gap-0.5 min-w-0">
+              <div className="flex-1 flex flex-col gap-1 min-w-0">
                 {visibleJobs.map((job) => (
                   <div key={job.id} onClick={(e) => e.stopPropagation()}>
                     <JobEventChip
@@ -87,7 +88,7 @@ export default function MonthView({ anchorDate, jobs, clientsById, timezone, onS
                   </div>
                 ))}
                 {extraCount > 0 && (
-                  <span className="text-[11px] text-brand-600 font-medium pl-1">
+                  <span className="text-xs sm:text-sm text-brand-700 font-semibold pl-1">
                     +{extraCount} {t.calendar.moreJobs}
                   </span>
                 )}

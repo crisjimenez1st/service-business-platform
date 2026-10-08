@@ -20,7 +20,7 @@ export default function Sidebar() {
 
   const linkClasses = ({ isActive }: { isActive: boolean }) =>
     [
-      'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium',
+      'group relative flex items-center gap-3 rounded-2xl px-3 py-3 text-sm lg:text-base font-medium md:justify-center lg:justify-start',
       'transition-all duration-200 ease-out motion-reduce:transition-none',
       'hover:bg-brand-50 hover:text-brand-700 hover:translate-x-0.5 motion-reduce:hover:translate-x-0',
       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
@@ -35,7 +35,7 @@ export default function Sidebar() {
   const initial = displayName.charAt(0).toUpperCase();
 
   return (
-    <aside className="hidden md:flex md:flex-col md:w-[72px] lg:w-64 shrink-0 border-r border-slate-200 bg-white h-screen sticky top-0">
+    <aside className="hidden md:flex md:flex-col md:w-[84px] lg:w-64 shrink-0 border-r border-slate-200 bg-white h-screen sticky top-0">
       <div className="flex items-center gap-2.5 px-4 py-5 border-b border-slate-100">
         <OneFlowMark size={36} className="shrink-0" />
         <span className="hidden lg:block font-semibold text-slate-900 truncate">
@@ -46,14 +46,14 @@ export default function Sidebar() {
       <nav className="flex-1 md:overflow-visible lg:overflow-y-auto px-3 py-4 space-y-1">
         {primary.map((item) => (
           <NavLink key={item.path} to={item.path} className={linkClasses}>
-            <NavContent icon={<item.icon size={20} className="shrink-0 transition-transform duration-200 group-hover:scale-110 motion-reduce:transform-none" />} label={item.label} />
+            <NavContent icon={<item.icon size={24} className="shrink-0 transition-transform duration-200 group-hover:scale-110 motion-reduce:transform-none" />} label={item.label} />
           </NavLink>
         ))}
 
         <div className="pt-3 mt-3 border-t border-slate-100 space-y-1">
           {secondary.map((item) => (
             <NavLink key={item.path} to={item.path} className={linkClasses}>
-              <NavContent icon={<item.icon size={20} className="shrink-0 transition-transform duration-200 group-hover:scale-110 motion-reduce:transform-none" />} label={item.label} />
+              <NavContent icon={<item.icon size={24} className="shrink-0 transition-transform duration-200 group-hover:scale-110 motion-reduce:transform-none" />} label={item.label} />
             </NavLink>
           ))}
         </div>
@@ -71,9 +71,9 @@ export default function Sidebar() {
         </div>
         <button
           onClick={signOut}
-          className="group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 w-full transition-all duration-200 ease-out motion-reduce:transition-none hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          className="group relative flex items-center gap-3 rounded-2xl px-3 py-3 text-sm lg:text-base font-medium text-slate-500 w-full md:justify-center lg:justify-start transition-all duration-200 ease-out motion-reduce:transition-none hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         >
-          <NavContent icon={<LogOut size={20} className="shrink-0 transition-transform duration-200 group-hover:scale-110 motion-reduce:transform-none" />} label={t.nav.logout} />
+          <NavContent icon={<LogOut size={24} className="shrink-0 transition-transform duration-200 group-hover:scale-110 motion-reduce:transform-none" />} label={t.nav.logout} />
         </button>
       </div>
     </aside>
