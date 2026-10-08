@@ -158,7 +158,7 @@ export default function ClinicHome() {
         />
         <AttentionTile
           icon={<Wallet size={20} />}
-          label="Por cobrar"
+          label="Pagos pendientes"
           value={owedText}
           highlight={false}
           onClick={() => navigate('/collections')}

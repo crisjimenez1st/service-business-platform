@@ -13,6 +13,7 @@ import {
   BarChart3,
   Settings,
   BellRing,
+  ClipboardList,
 } from 'lucide-react';
 import { t } from '../../i18n/es';
 import type { BusinessTerms } from '../../i18n/businessTerms';
@@ -73,10 +74,10 @@ export function buildNavItems(businessType: BusinessType, terms: BusinessTerms):
       { label: t.nav.dashboard, shortLabel: 'Inicio', path: '/dashboard', icon: LayoutDashboard },
       { label: terms.calendar, path: '/calendar', icon: Calendar },
       { label: terms.clients, path: '/clients', icon: Users },
-      { label: t.nav.payments, path: '/collections', icon: Wallet },
+      { label: 'Pagos', path: '/collections', icon: Wallet },
     ],
     secondary: [
-      { label: terms.quotes, path: '/quotes', icon: FileText },
+      { label: 'Registro del mes', path: '/registry', icon: ClipboardList },
       { label: t.nav.settings, path: '/settings', icon: Settings },
     ],
   };

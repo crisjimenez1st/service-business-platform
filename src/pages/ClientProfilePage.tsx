@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Phone, MessageCircle, MapPin, Pencil } from 'lucide-react';
 import { Card, EmptyState, ErrorState } from '../components/ui';
+import ClinicPatientProfile from '../components/patients/ClinicPatientProfile';
 import Tabs from '../components/clients/Tabs';
 import EquipmentCard from '../components/clients/EquipmentCard';
 import JobHistoryCard from '../components/clients/JobHistoryCard';
@@ -44,7 +45,7 @@ const TABS = [
  * las oportunidades del cliente siguen sobre localDb/mock -- esas
  * entidades no se migran en este bloque.
  */
-export default function ClientProfilePage() {
+function TechnicalClientProfilePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('summary');
@@ -300,4 +301,11 @@ export default function ClientProfilePage() {
       />
     </div>
   );
+}
+
+/** Clínicas ven la ficha del paciente; servicios técnicos conservan el perfil de cliente. */
+export default function ClientProfilePage() {
+  const { company } = useCurrentCompany();
+  if (company && company.businessType !== 'technical_services') return <ClinicPatientProfile />;
+  return <TechnicalClientProfilePage />;
 }

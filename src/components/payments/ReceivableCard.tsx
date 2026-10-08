@@ -3,7 +3,7 @@ import type { Receivable } from '../../types';
 import { formatCurrency } from '../../utils/currency';
 import { PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TONES } from '../../utils/paymentStatus';
 import { formatCalendarDate } from '../../utils/timezone';
-import { t } from '../../i18n/es';
+import { useCollectionsCopy } from '../../hooks/useCollectionsCopy';
 
 interface ReceivableCardProps {
   receivable: Receivable;
@@ -17,6 +17,7 @@ interface ReceivableCardProps {
  * muestran con lo cobrado en vez de un saldo, porque ya no son deuda.
  */
 export default function ReceivableCard({ receivable: r, onOpen }: ReceivableCardProps) {
+  const copy = useCollectionsCopy();
   return (
     <Card
       className="cursor-pointer hover:border-slate-300 transition-colors"
@@ -36,7 +37,7 @@ export default function ReceivableCard({ receivable: r, onOpen }: ReceivableCard
           <p className="text-xs text-slate-500 truncate">{r.serviceType}</p>
         </div>
         <div className="flex flex-wrap justify-end gap-1.5 shrink-0">
-          {r.isOverdue && <Badge tone="danger">{t.collections.overdueBadge}</Badge>}
+          {r.isOverdue && <Badge tone="danger">{copy.overdueBadge}</Badge>}
           {!r.requiresReview && (
             <Badge tone={PAYMENT_STATUS_TONES[r.paymentStatus]}>{PAYMENT_STATUS_LABELS[r.paymentStatus]}</Badge>
           )}
@@ -47,12 +48,12 @@ export default function ReceivableCard({ receivable: r, onOpen }: ReceivableCard
         <div>
           {r.requiresReview ? (
             <>
-              <p className="text-xs text-slate-500">{t.collections.reviewCollected}</p>
+              <p className="text-xs text-slate-500">{copy.reviewCollected}</p>
               <p className="text-lg font-semibold text-amber-700">{formatCurrency(r.paidAmount, r.currency)}</p>
             </>
           ) : (
             <>
-              <p className="text-xs text-slate-500">{t.collections.balance}</p>
+              <p className="text-xs text-slate-500">{copy.balance}</p>
               <p className={['text-lg font-semibold', r.isOverdue ? 'text-red-700' : 'text-slate-900'].join(' ')}>
                 {formatCurrency(r.balance, r.currency)}
               </p>
@@ -62,11 +63,11 @@ export default function ReceivableCard({ receivable: r, onOpen }: ReceivableCard
         <div className="text-right text-xs text-slate-500">
           {!r.requiresReview && (
             <p>
-              {t.collections.paid} {formatCurrency(r.paidAmount, r.currency)} / {formatCurrency(r.total, r.currency)}
+              {copy.paid} {formatCurrency(r.paidAmount, r.currency)} / {formatCurrency(r.total, r.currency)}
             </p>
           )}
           <p className={r.isOverdue ? 'text-red-700 font-medium' : ''}>
-            {r.dueDate ? `${t.collections.dueDate} ${formatCalendarDate(r.dueDate)}` : t.collections.noDueDate}
+            {r.dueDate ? `${copy.dueDate} ${formatCalendarDate(r.dueDate)}` : copy.noDueDate}
           </p>
         </div>
       </div>

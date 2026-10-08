@@ -10,6 +10,7 @@ import { useCollectionsStore } from '../store/collectionsStore';
 import type { CurrencyCode, Receivable } from '../types';
 import { formatCurrency } from '../utils/currency';
 import { t } from '../i18n/es';
+import { useCollectionsCopy } from '../hooks/useCollectionsCopy';
 
 type CollectionsFilter = 'all' | 'unpaid' | 'partial' | 'overdue';
 
@@ -22,6 +23,7 @@ type CollectionsFilter = 'all' | 'unpaid' | 'partial' | 'overdue';
  */
 export default function CollectionsPage() {
   const navigate = useNavigate();
+  const copy = useCollectionsCopy();
   const { company } = useCurrentCompany();
   const companyId = company?.id;
   const canView = company?.role === 'owner' || company?.role === 'office';
@@ -64,7 +66,7 @@ export default function CollectionsPage() {
   }, [open, filter, search]);
 
   if (!canView) {
-    return <EmptyState icon={<Wallet size={32} />} title={t.collections.forbidden} />;
+    return <EmptyState icon={<Wallet size={32} />} title={copy.forbidden} />;
   }
 
   const cardCurrencies: { currency: CurrencyCode; outstanding: number; overdueAmount: number; overdueCount: number; openCount: number }[] =
@@ -82,10 +84,10 @@ export default function CollectionsPage() {
   const multiCurrency = cardCurrencies.length > 1;
 
   const filterOptions: { value: CollectionsFilter; label: string }[] = [
-    { value: 'all', label: t.collections.filterAll },
-    { value: 'overdue', label: t.collections.filterOverdue },
-    { value: 'unpaid', label: t.collections.filterUnpaid },
-    { value: 'partial', label: t.collections.filterPartial },
+    { value: 'all', label: copy.filterAll },
+    { value: 'overdue', label: copy.filterOverdue },
+    { value: 'unpaid', label: copy.filterUnpaid },
+    { value: 'partial', label: copy.filterPartial },
   ];
 
   function openJob(jobId: string) {
@@ -95,8 +97,8 @@ export default function CollectionsPage() {
   return (
     <div className="space-y-5 pb-6">
       <div>
-        <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">{t.collections.title}</h1>
-        <p className="text-sm text-slate-500 mt-0.5">{t.collections.subtitle}</p>
+        <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">{copy.title}</h1>
+        <p className="text-sm text-slate-500 mt-0.5">{copy.subtitle}</p>
       </div>
 
       {error ? (
@@ -109,13 +111,13 @@ export default function CollectionsPage() {
             {cardCurrencies.map((c) => (
               <div key={c.currency} className="contents">
                 <MetricCard
-                  label={multiCurrency ? `${t.collections.outstanding} · ${c.currency}` : t.collections.outstanding}
+                  label={multiCurrency ? `${copy.outstanding} · ${c.currency}` : copy.outstanding}
                   value={formatCurrency(c.outstanding, c.currency)}
                   icon={<Wallet size={18} />}
                   emphasis
                 />
                 <MetricCard
-                  label={multiCurrency ? `${t.collections.overdue} · ${c.currency}` : t.collections.overdue}
+                  label={multiCurrency ? `${copy.overdue} · ${c.currency}` : copy.overdue}
                   value={formatCurrency(c.overdueAmount, c.currency)}
                   icon={<Clock size={18} />}
                 />
@@ -126,7 +128,7 @@ export default function CollectionsPage() {
             {cardCurrencies
               .map(
                 (c) =>
-                  `${c.openCount} ${t.collections.openJobs}${c.overdueCount > 0 ? ` · ${c.overdueCount} ${t.collections.overdueJobs}` : ''}${multiCurrency ? ` (${c.currency})` : ''}`
+                  `${c.openCount} ${copy.openJobs}${c.overdueCount > 0 ? ` · ${c.overdueCount} ${copy.overdueJobs}` : ''}${multiCurrency ? ` (${c.currency})` : ''}`
               )
               .join(' | ')}
           </p>
@@ -137,9 +139,9 @@ export default function CollectionsPage() {
                 <AlertTriangle size={18} className="text-amber-700 mt-0.5 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-amber-900">
-                    {t.collections.unpricedTitle} ({unpricedJobs.length})
+                    {copy.unpricedTitle} ({unpricedJobs.length})
                   </p>
-                  <p className="text-xs text-amber-800 mt-0.5">{t.collections.unpricedDescription}</p>
+                  <p className="text-xs text-amber-800 mt-0.5">{copy.unpricedDescription}</p>
                   <ul className="mt-2 divide-y divide-amber-200">
                     {unpricedJobs.map((job) => (
                       <li key={job.jobId} className="flex items-center justify-between gap-3 py-2">
@@ -151,7 +153,7 @@ export default function CollectionsPage() {
                           onClick={() => navigate(`/jobs/${job.jobId}`)}
                           className="text-sm font-medium text-amber-900 underline shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-600 rounded"
                         >
-                          {t.collections.unpricedAction}
+                          {copy.unpricedAction}
                         </button>
                       </li>
                     ))}
@@ -168,7 +170,7 @@ export default function CollectionsPage() {
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder={t.collections.searchPlaceholder}
+                placeholder={copy.searchPlaceholder}
                 className="w-full pl-9 pr-3 min-h-11 rounded-xl border border-slate-300 text-sm bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:border-brand-500"
               />
             </div>
@@ -177,11 +179,11 @@ export default function CollectionsPage() {
             {open.length === 0 ? (
               <EmptyState
                 icon={<Wallet size={32} />}
-                title={t.collections.empty}
-                description={t.collections.emptyDescription}
+                title={copy.empty}
+                description={copy.emptyDescription}
               />
             ) : filtered.length === 0 ? (
-              <EmptyState title={t.collections.noResults} />
+              <EmptyState title={copy.noResults} />
             ) : (
               <div className="space-y-2">
                 {filtered.map((r) => (
@@ -194,8 +196,8 @@ export default function CollectionsPage() {
           {review.length > 0 && (
             <section className="space-y-2">
               <div>
-                <h2 className="text-base font-semibold text-slate-900">{t.collections.reviewTitle}</h2>
-                <p className="text-xs text-slate-500 mt-0.5">{t.collections.reviewDescription}</p>
+                <h2 className="text-base font-semibold text-slate-900">{copy.reviewTitle}</h2>
+                <p className="text-xs text-slate-500 mt-0.5">{copy.reviewDescription}</p>
               </div>
               {review.map((r) => (
                 <ReceivableCard key={r.jobId} receivable={r} onOpen={openJob} />

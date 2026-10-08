@@ -44,6 +44,11 @@ export default function ClientsPage() {
     [opportunities]
   );
 
+  const isClinic = company?.businessType !== 'technical_services';
+  const filterOptions = isClinic
+    ? FILTER_OPTIONS.filter((o) => o.value === 'all' || o.value === 'with_balance')
+    : FILTER_OPTIONS;
+
   const filtered = useMemo(() => {
     const byFilter = filterClients(clients, filter, opportunities);
     return searchClientsLocal(byFilter, query);
@@ -70,7 +75,7 @@ export default function ClientsPage() {
         />
       </div>
 
-      <FilterChips options={FILTER_OPTIONS} active={filter} onChange={setFilter} />
+      <FilterChips options={filterOptions} active={filter} onChange={setFilter} />
 
       {error ? (
         <ErrorState message={error.message} onRetry={refetch} />
