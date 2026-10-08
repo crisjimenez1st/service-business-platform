@@ -10,7 +10,7 @@ import { useServiceRulesStore } from '../../store/serviceRulesStore';
 import { createAppointment } from '../../services/appointmentService';
 
 /** Botón "Nueva cita" + formulario. Solo para owner/office. `onCreated` recarga la vista que lo usa. */
-export default function NewAppointmentButton({ onCreated }: { onCreated: () => void }) {
+export default function NewAppointmentButton({ onCreated, className = '' }: { onCreated: () => void; className?: string }) {
   const { company } = useCurrentCompany();
   const companyId = company?.id;
   const terms = useTerms();
@@ -30,7 +30,7 @@ export default function NewAppointmentButton({ onCreated }: { onCreated: () => v
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>
+      <Button onClick={() => setOpen(true)} className={className}>
         <Plus size={18} className="mr-1.5" />
         Nueva cita
       </Button>

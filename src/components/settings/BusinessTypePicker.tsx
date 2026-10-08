@@ -13,13 +13,15 @@ interface BusinessTypePickerProps {
   value: BusinessType | null;
   onChange: (value: BusinessType) => void;
   disabled?: boolean;
+  /** Si se indica, solo se muestran estos tipos. */
+  allowed?: BusinessType[];
 }
 
 /** Cuatro tarjetas grandes para elegir el tipo de negocio. Solo cambia el vocabulario y el menú. */
-export default function BusinessTypePicker({ value, onChange, disabled }: BusinessTypePickerProps) {
+export default function BusinessTypePicker({ value, onChange, disabled, allowed }: BusinessTypePickerProps) {
   return (
     <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Tipo de negocio">
-      {BUSINESS_TYPE_OPTIONS.map((o) => {
+      {BUSINESS_TYPE_OPTIONS.filter((o) => !allowed || allowed.includes(o.value)).map((o) => {
         const Icon = ICONS[o.value];
         const active = value === o.value;
         return (
