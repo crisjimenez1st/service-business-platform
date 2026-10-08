@@ -62,6 +62,7 @@ export interface Database {
           paid_until: string | null;
           booking_token: string;
           booking_enabled: boolean;
+          review_url: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -69,6 +70,7 @@ export interface Database {
           id?: string;
           name: string;
           booking_enabled?: boolean;
+          review_url?: string | null;
           slug?: string | null;
           phone?: string | null;
           whatsapp?: string | null;
@@ -140,6 +142,7 @@ export interface Database {
           notes: string | null;
           contact_consent: boolean;
           birth_date: string | null;
+          review_asked_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -154,6 +157,7 @@ export interface Database {
           notes?: string | null;
           contact_consent?: boolean;
           birth_date?: string | null;
+          review_asked_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };

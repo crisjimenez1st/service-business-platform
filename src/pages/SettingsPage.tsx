@@ -4,6 +4,7 @@ import BusinessTypePicker from '../components/settings/BusinessTypePicker';
 import CurrencyPicker from '../components/settings/CurrencyPicker';
 import ServiceRulesCard from '../components/settings/ServiceRulesCard';
 import BookingLinkCard from '../components/settings/BookingLinkCard';
+import ReviewLinkCard from '../components/settings/ReviewLinkCard';
 import { useCurrentCompany } from '../contexts/useCurrentCompany';
 import { useAuth } from '../contexts/useAuth';
 import { changePassword, setBusinessType, setCompanyCurrency, setCompanyName } from '../services/companySetupService';
@@ -246,6 +247,13 @@ export default function SettingsPage() {
         <section className="space-y-2">
           <h2 className="text-base font-semibold text-slate-900">Enlace para pedir cita</h2>
           <BookingLinkCard />
+        </section>
+      )}
+
+      {(isOwner || company.role === 'office') && company.businessType !== 'technical_services' && (
+        <section className="space-y-2">
+          <h2 className="text-base font-semibold text-slate-900">Enlace de reseñas</h2>
+          <ReviewLinkCard />
         </section>
       )}
 

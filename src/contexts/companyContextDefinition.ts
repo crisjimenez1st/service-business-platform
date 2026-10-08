@@ -17,6 +17,8 @@ export interface CurrentCompany {
   /** Enlace público para pedir cita (migración 023). */
   bookingToken: string;
   bookingEnabled: boolean;
+  /** Enlace donde el paciente deja su reseña (migración 025). */
+  reviewUrl: string | null;
   role: CompanyMemberRoleDb;
 }
 

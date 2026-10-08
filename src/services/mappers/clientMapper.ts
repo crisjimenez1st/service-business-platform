@@ -31,6 +31,7 @@ export function clientRowToDomain(row: ClientRow): Client {
     notes: row.notes ?? undefined,
     contactConsent: row.contact_consent,
     birthDate: row.birth_date ?? undefined,
+    reviewAskedAt: row.review_asked_at ?? undefined,
     createdAt: row.created_at,
     mapsUrl: undefined,
     totalBilled: undefined,
@@ -52,6 +53,8 @@ export interface ClientDomainInput {
   contactConsent?: boolean;
   /** YYYY-MM-DD; en un parche, '' borra la fecha. */
   birthDate?: string;
+  /** ISO de cuando se le pidió reseña. */
+  reviewAskedAt?: string;
 }
 
 /** Traduce datos de formulario (camelCase, sin id/companyId/timestamps) a un Insert de Supabase. */
@@ -85,5 +88,6 @@ export function clientDomainToUpdateRow(
   if (patch.notes !== undefined) update.notes = patch.notes;
   if (patch.contactConsent !== undefined) update.contact_consent = patch.contactConsent;
   if (patch.birthDate !== undefined) update.birth_date = patch.birthDate || null;
+  if (patch.reviewAskedAt !== undefined) update.review_asked_at = patch.reviewAskedAt;
   return update;
 }
