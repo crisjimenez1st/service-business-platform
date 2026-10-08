@@ -430,6 +430,26 @@ export interface Database {
         Relationships: [];
       };
 
+      /** Solo lectura (owner/doctor): escribir pasa por save_visit_record. */
+      visit_records: {
+        Row: {
+          job_id: string;
+          company_id: string;
+          client_id: string;
+          reason: string | null;
+          diagnosis: string | null;
+          treatment: string | null;
+          prescription: string | null;
+          next_steps: string | null;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+
       /** Solo lectura (owner/office): escribir pasa por las RPCs de recordatorio de cita. */
       appointment_responses: {
         Row: {
@@ -800,6 +820,17 @@ export interface Database {
           p_notes?: string | null;
         };
         Returns: Database['public']['Tables']['jobs']['Row'];
+      };
+      save_visit_record: {
+        Args: {
+          p_job_id: string;
+          p_reason?: string | null;
+          p_diagnosis?: string | null;
+          p_treatment?: string | null;
+          p_prescription?: string | null;
+          p_next_steps?: string | null;
+        };
+        Returns: Database['public']['Tables']['visit_records']['Row'];
       };
       prepare_payment_receipt: {
         Args: { p_payment_id: string };

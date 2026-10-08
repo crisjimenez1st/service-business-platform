@@ -12,6 +12,17 @@ type Copy = Record<string, Section>;
  */
 const CLINIC_COPY: Copy = {
   nav: { clients: 'Pacientes', jobs: 'Citas', technicians: 'Doctores', payments: 'Pagos', calendar: 'Agenda' },
+  clients: {
+    title: 'Pacientes',
+    search: 'Buscar por nombre, teléfono o dirección...',
+    noResults: 'No se encontraron pacientes con esa búsqueda.',
+    lastService: 'Última visita',
+    newClient: 'Nuevo paciente',
+    notes: 'Notas del paciente',
+    nameRequired: 'Escribe el nombre del paciente',
+    phoneRequired: 'Escribe el teléfono del paciente',
+  },
+  clientProfile: { editClient: 'Editar paciente', noJobs: 'Todavía no tiene citas.' },
   calendar: {
     title: 'Agenda',
     unscheduled: 'Sin agendar',

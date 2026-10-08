@@ -10,6 +10,7 @@ import { buildWhatsAppLink } from '../utils/whatsapp';
 import { Badge, Button, ErrorState, Card } from '../components/ui';
 import JobStatusActions from '../components/jobs/JobStatusActions';
 import CancelJobModal from '../components/jobs/CancelJobModal';
+import VisitRecordCard from '../components/jobs/VisitRecordCard';
 import JobPaymentsTab from '../components/payments/JobPaymentsTab';
 import AssignTechnicianSheet from '../components/calendar/AssignTechnicianSheet';
 import ScheduleJobSheet from '../components/calendar/ScheduleJobSheet';
@@ -27,7 +28,7 @@ import { getJobFinancials, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TONES } from '.
 import { formatCalendarDate } from '../utils/timezone';
 import { t } from '../i18n/es';
 
-type TabKey = 'summary' | 'service' | 'schedule' | 'evidence' | 'materials' | 'payments' | 'history';
+type TabKey = 'summary' | 'record' | 'service' | 'schedule' | 'evidence' | 'materials' | 'payments' | 'history';
 
 /**
  * Detalle completo de un Job (/jobs/:id, Fase B2B Bloque 5). Página
@@ -433,6 +434,10 @@ export default function JobDetailPage() {
             </Button>
           </Card>
         </div>
+      )}
+
+      {activeTab === 'record' && isClinic && (
+        <VisitRecordCard jobId={job.id} cancelled={job.status === 'cancelled'} timezone={timezone} />
       )}
 
       {activeTab === 'payments' && <JobPaymentsTab

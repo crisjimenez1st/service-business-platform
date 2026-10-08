@@ -7,12 +7,13 @@ import { useCurrentCompany } from '../../contexts/useCurrentCompany';
 import { useTerms } from '../../hooks/useTerms';
 import { useSingleClientStore, useClientStore } from '../../store/clientStore';
 import { getClientJobs } from '../../services/jobService';
+import { getClientVisitRecords } from '../../services/visitRecordService';
 import { formatCurrency } from '../../utils/currency';
 import { buildWhatsAppLink } from '../../utils/whatsapp';
 import { JOB_STATUS_LABELS, JOB_STATUS_TONES } from '../../utils/jobStatus';
 import { formatLongDateInTimezone, formatTimeInTimezone } from '../../utils/timezone';
 import { t } from '../../i18n/es';
-import type { CurrencyCode, Job } from '../../types';
+import type { CurrencyCode, Job, VisitRecord } from '../../types';
 
 /**
  * Ficha del paciente (clínicas): quién es, cuándo viene, qué se le ha hecho
@@ -35,6 +36,7 @@ export default function ClinicPatientProfile() {
   const updateClient = useClientStore((s) => s.updateClient);
 
   const [jobs, setJobs] = useState<Job[] | null>(null);
+  const [records, setRecords] = useState<Record<string, VisitRecord>>({});
   const [editOpen, setEditOpen] = useState(false);
 
   useEffect(() => {
@@ -47,6 +49,8 @@ export default function ClinicPatientProfile() {
     (async () => {
       const result = await getClientJobs(companyId, id);
       if (!cancelled) setJobs(result.error ? [] : result.data);
+      const rec = await getClientVisitRecords(companyId, id);
+      if (!cancelled && !rec.error) setRecords(rec.data);
     })();
     return () => {
       cancelled = true;
@@ -198,6 +202,19 @@ export default function ClinicPatientProfile() {
                             {job.status === 'new' || job.status === 'scheduled' ? 'Agendada' : JOB_STATUS_LABELS[job.status]}
                           </Badge>
                         </div>
+                        {records[job.id] && (
+                          <div className="mt-2 space-y-1 text-sm text-slate-700">
+                            {records[job.id].diagnosis && (
+                              <p className="line-clamp-2"><span className="font-medium text-slate-900">Diagnóstico:</span> {records[job.id].diagnosis}</p>
+                            )}
+                            {records[job.id].treatment && (
+                              <p className="line-clamp-2"><span className="font-medium text-slate-900">Tratamiento:</span> {records[job.id].treatment}</p>
+                            )}
+                            {records[job.id].nextSteps && (
+                              <p className="line-clamp-2"><span className="font-medium text-slate-900">Próximos pasos:</span> {records[job.id].nextSteps}</p>
+                            )}
+                          </div>
+                        )}
                         {job.notes && <p className="text-sm text-slate-600 mt-2 line-clamp-2">{job.notes}</p>}
                         {canSeeMoney && job.total !== undefined && job.status !== 'cancelled' && (
                           <p className="text-xs text-slate-500 mt-2 pt-2 border-t border-slate-100">
