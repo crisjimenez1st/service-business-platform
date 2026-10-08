@@ -122,7 +122,7 @@ export default function ClinicHome() {
 
   return (
     <div className="space-y-6 pb-4">
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 to-brand-800 text-white p-5 sm:p-6 shadow-sm">
+      <div className="relative overflow-hidden md:ml-24 lg:ml-0 lg:max-w-4xl rounded-3xl bg-gradient-to-br from-brand-600 to-brand-800 text-white p-5 sm:p-6 shadow-sm">
         <div aria-hidden="true" className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
         <div aria-hidden="true" className="absolute right-12 -bottom-14 h-32 w-32 rounded-full bg-white/10" />
         <div className="relative flex flex-wrap items-end justify-between gap-4">
