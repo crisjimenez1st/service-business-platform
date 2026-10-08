@@ -14,6 +14,7 @@ import {
   Settings,
   BellRing,
   ClipboardList,
+  Inbox,
 } from 'lucide-react';
 import { t } from '../../i18n/es';
 import type { BusinessTerms } from '../../i18n/businessTerms';
@@ -77,6 +78,7 @@ export function buildNavItems(businessType: BusinessType, terms: BusinessTerms):
       { label: 'Pagos', path: '/collections', icon: Wallet },
     ],
     secondary: [
+      { label: 'Solicitudes de cita', path: '/requests', icon: Inbox },
       { label: 'Registro del mes', path: '/registry', icon: ClipboardList },
       { label: 'Reportes', path: '/reports', icon: BarChart3 },
       { label: t.nav.settings, path: '/settings', icon: Settings },

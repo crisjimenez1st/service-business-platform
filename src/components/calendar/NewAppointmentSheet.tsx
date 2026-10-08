@@ -18,6 +18,9 @@ interface NewAppointmentSheetProps {
   onCreateClient: (input: { name: string; phone: string }) => Promise<string | null>;
   /** Devuelve un mensaje de error o null si se guardó. */
   onSave: (input: NewAppointmentInput) => Promise<string | null>;
+  /** Para abrir la hoja ya con el paciente y/o el servicio elegidos (p. ej. desde una solicitud). */
+  initialClientId?: string | null;
+  initialService?: string;
 }
 
 /** Agendar una cita directa: paciente, servicio (obligatorio), fecha y hora, precio opcional. Se monta solo al abrir. */
@@ -31,13 +34,15 @@ export default function NewAppointmentSheet({
   onClose,
   onCreateClient,
   onSave,
+  initialClientId = null,
+  initialService = '',
 }: NewAppointmentSheetProps) {
   const [query, setQuery] = useState('');
-  const [clientId, setClientId] = useState<string | null>(null);
+  const [clientId, setClientId] = useState<string | null>(initialClientId);
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
-  const [service, setService] = useState('');
+  const [service, setService] = useState(initialService);
   const [startValue, setStartValue] = useState('');
   const [price, setPrice] = useState('');
   const [saving, setSaving] = useState(false);

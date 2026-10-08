@@ -60,12 +60,15 @@ export interface Database {
           business_type: string;
           trial_ends_at: string;
           paid_until: string | null;
+          booking_token: string;
+          booking_enabled: boolean;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
           name: string;
+          booking_enabled?: boolean;
           slug?: string | null;
           phone?: string | null;
           whatsapp?: string | null;
@@ -619,6 +622,25 @@ export interface Database {
         Relationships: [];
       };
 
+      appointment_requests: {
+        Row: {
+          id: string;
+          company_id: string;
+          name: string;
+          phone: string;
+          phone_key: string;
+          service: string;
+          preferred: string | null;
+          note: string | null;
+          status: string;
+          created_at: string;
+          resolved_at: string | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+
       company_quote_sequences: {
         Row: {
           company_id: string;
@@ -696,6 +718,30 @@ export interface Database {
       set_appointment_response: {
         Args: { p_job_id: string; p_response: string | null };
         Returns: undefined;
+      };
+      get_public_booking: {
+        Args: { p_token: string };
+        Returns: {
+          company_name: string;
+          company_logo_url: string | null;
+          company_phone: string | null;
+          services: string[] | null;
+        }[];
+      };
+      submit_appointment_request: {
+        Args: {
+          p_token: string;
+          p_name: string;
+          p_phone: string;
+          p_service: string;
+          p_preferred?: string | null;
+          p_note?: string | null;
+        };
+        Returns: string;
+      };
+      resolve_appointment_request: {
+        Args: { p_id: string; p_status: string };
+        Returns: Database['public']['Tables']['appointment_requests']['Row'];
       };
       get_public_appointment: {
         Args: { p_token: string };
