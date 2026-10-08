@@ -119,7 +119,9 @@ export default function FollowupsPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [waitlistActionError, setWaitlistActionError] = useState<string | null>(null);
 
-  const [view, setView] = useState<View>(searchParams.get('tab') === 'waitlist' ? 'waitlist' : 'today');
+  const [view, setView] = useState<View>(
+    (['today', 'tomorrow', 'inactive', 'waitlist'] as const).find((v) => v === searchParams.get('tab')) ?? 'today'
+  );
   const [whatsappFor, setWhatsappFor] = useState<FollowupDue | null>(null);
   const [postponeFor, setPostponeFor] = useState<FollowupDue | null>(null);
   const [discardFor, setDiscardFor] = useState<FollowupDue | null>(null);

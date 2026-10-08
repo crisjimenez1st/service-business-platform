@@ -62,3 +62,40 @@ export async function setBusinessType(companyId: string, businessType: BusinessT
     return fail(mapSupabaseError(err));
   }
 }
+
+/** Cambia el nombre de la clínica o del médico (solo owner, por RLS). */
+export async function setCompanyName(companyId: string, name: string): Promise<ServiceResult<null>> {
+  const clean = name.trim();
+  if (clean.length < 2) return fail({ kind: 'unknown', message: 'Escribe un nombre de al menos 2 letras.' });
+  try {
+    const { data, error } = await supabase
+      .from('companies')
+      .update({ name: clean })
+      .eq('id', companyId)
+      .select('id')
+      .maybeSingle();
+    if (error) return fail(mapSupabaseError(error));
+    if (!data) return fail({ kind: 'forbidden', message: 'No pudimos cambiar el nombre.' });
+    return ok(null);
+  } catch (err) {
+    return fail(mapSupabaseError(err));
+  }
+}
+
+/** Cambia la contraseña de quien tiene la sesión abierta, verificando antes la actual. */
+export async function changePassword(
+  email: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<ServiceResult<null>> {
+  if (newPassword.length < 8) return fail({ kind: 'unknown', message: 'La contraseña nueva debe tener al menos 8 caracteres.' });
+  try {
+    const check = await supabase.auth.signInWithPassword({ email, password: currentPassword });
+    if (check.error) return fail({ kind: 'unknown', message: 'La contraseña actual no es correcta.' });
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) return fail(mapSupabaseError(error));
+    return ok(null);
+  } catch (err) {
+    return fail(mapSupabaseError(err));
+  }
+}

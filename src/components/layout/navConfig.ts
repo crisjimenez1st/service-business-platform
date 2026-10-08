@@ -13,6 +13,7 @@ import {
   BarChart3,
   Settings,
   BellRing,
+  ClipboardList,
 } from 'lucide-react';
 import { t } from '../../i18n/es';
 import type { BusinessTerms } from '../../i18n/businessTerms';
@@ -66,16 +67,17 @@ export function buildNavItems(businessType: BusinessType, terms: BusinessTerms):
   }
 
   return {
+    // Menú simple para clínicas: el día (Inicio), la Agenda, los Pacientes y los
+    // Cobros. Citas (lista) y Avisos siguen existiendo, pero se llega a ellos desde
+    // Inicio y Agenda, no como puertas aparte.
     primary: [
       { label: t.nav.dashboard, shortLabel: 'Inicio', path: '/dashboard', icon: LayoutDashboard },
-      { label: terms.clients, path: '/clients', icon: Users },
       { label: terms.calendar, path: '/calendar', icon: Calendar },
-      { label: terms.followups, shortLabel: 'Avisos', path: '/followups', icon: BellRing },
+      { label: terms.clients, path: '/clients', icon: Users },
+      { label: 'Pagos', path: '/collections', icon: Wallet },
     ],
     secondary: [
-      { label: terms.jobs, path: '/jobs', icon: Briefcase },
-      { label: terms.quotes, path: '/quotes', icon: FileText },
-      { label: t.nav.payments, path: '/collections', icon: Wallet },
+      { label: 'Registro del mes', path: '/registry', icon: ClipboardList },
       { label: t.nav.settings, path: '/settings', icon: Settings },
     ],
   };

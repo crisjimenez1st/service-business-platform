@@ -1,6 +1,7 @@
 import NewAppointmentButton from '../components/calendar/NewAppointmentButton';
 import { useEffect, useMemo, useState } from 'react';
-import { ErrorState } from '../components/ui';
+import { useNavigate } from 'react-router-dom';
+import { Button, ErrorState } from '../components/ui';
 import CalendarNav, { type CalendarViewMode } from '../components/calendar/CalendarNav';
 import MonthView from '../components/calendar/MonthView';
 import WeekView from '../components/calendar/WeekView';
@@ -39,6 +40,7 @@ import { t } from '../i18n/es';
 export default function CalendarPage() {
   const { company } = useCurrentCompany();
   const terms = useTerms();
+  const navigate = useNavigate();
   const companyId = company?.id;
   const role = company?.role;
   const timezone = company?.timezone ?? 'America/Managua';
@@ -187,9 +189,14 @@ export default function CalendarPage() {
     <div className="space-y-4 pb-4">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">{t.calendar.title}</h1>
-        <NewAppointmentButton
-          onCreated={() => companyId && loadRange(companyId, rangeStart.toISOString(), rangeEnd.toISOString())}
-        />
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" onClick={() => navigate('/jobs')}>
+            Ver como lista
+          </Button>
+          <NewAppointmentButton
+            onCreated={() => companyId && loadRange(companyId, rangeStart.toISOString(), rangeEnd.toISOString())}
+          />
+        </div>
       </div>
 
       <CalendarNav

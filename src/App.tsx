@@ -17,6 +17,7 @@ import CalendarPage from './pages/CalendarPage';
 import JobsPage from './pages/JobsPage';
 import JobDetailPage from './pages/JobDetailPage';
 import OnboardingPage from './pages/OnboardingPage';
+import MonthlyRegistryPage from './pages/MonthlyRegistryPage';
 import SettingsPage from './pages/SettingsPage';
 import FollowupsPage from './pages/FollowupsPage';
 import CollectionsPage from './pages/CollectionsPage';
@@ -78,6 +79,7 @@ export default function App() {
                 <Route path="/equipment" element={<ComingSoonPage title={t.nav.equipment} />} />
                 <Route path="/warranties" element={<ComingSoonPage title={t.nav.warranties} />} />
                 <Route path="/reports" element={<ComingSoonPage title={t.nav.reports} />} />
+                <Route path="/registry" element={<MonthlyRegistryPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
               </Route>
             </Route>

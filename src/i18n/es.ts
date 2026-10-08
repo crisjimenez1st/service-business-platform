@@ -69,7 +69,7 @@ export const t = {
     search: 'Buscar por nombre, teléfono o dirección...',
     filterAll: 'Todos',
     filterActive: 'Activos',
-    filterBalance: 'Con saldo',
+    filterBalance: 'Con saldo pendiente',
     filterOpportunity: 'Con oportunidad',
     filterMaintenance: 'Mantenimiento próximo',
     filterWarranty: 'Garantía próxima',
