@@ -12,6 +12,7 @@ import QuoteFormPage from './pages/QuoteFormPage';
 import QuoteDetailPage from './pages/QuoteDetailPage';
 import QuotePublicPage from './pages/QuotePublicPage';
 import AppointmentConfirmPage from './pages/AppointmentConfirmPage';
+import ReceiptPage from './pages/ReceiptPage';
 import CalendarPage from './pages/CalendarPage';
 import JobsPage from './pages/JobsPage';
 import JobDetailPage from './pages/JobDetailPage';
@@ -54,6 +55,7 @@ export default function App() {
             */}
             <Route path="/q/:publicToken" element={<QuotePublicPage />} />
             <Route path="/c/:token" element={<AppointmentConfirmPage />} />
+            <Route path="/r/:token" element={<ReceiptPage />} />
 
             <Route element={<ProtectedRoute />}>
               <Route element={<AppLayout />}>
