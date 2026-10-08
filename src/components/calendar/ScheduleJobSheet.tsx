@@ -60,7 +60,7 @@ export default function ScheduleJobSheet({
     if (ok) {
       onClose();
     } else {
-      setError('No pudimos programar el trabajo. Verifica las fechas e intenta de nuevo.');
+      setError('No pudimos agendar la cita. Verifica las fechas e intenta de nuevo.');
     }
   }
 
@@ -72,7 +72,7 @@ export default function ScheduleJobSheet({
     if (ok) {
       onClose();
     } else {
-      setError('No pudimos desprogramar el trabajo.');
+      setError('No pudimos quitar la fecha de la cita.');
     }
   }
 

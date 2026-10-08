@@ -30,12 +30,12 @@ import { mapSupabaseError, ok, fail, type ServiceError, type ServiceResult } fro
  * algunos incluyen ids internos o nombres de funciones.
  */
 const BUSINESS_ERRORS: { match: string; message: string }[] = [
-  { match: 'excede el saldo pendiente', message: 'El pago es mayor al saldo pendiente de este trabajo.' },
-  { match: 'no tiene un total válido', message: 'Este trabajo todavía no tiene un total. Define el total primero.' },
+  { match: 'excede el saldo pendiente', message: 'El pago es mayor al saldo pendiente de esta cita.' },
+  { match: 'no tiene un total válido', message: 'Esta cita todavía no tiene precio. Defínelo primero.' },
   { match: 'monto del pago debe ser mayor a cero', message: 'El monto del pago debe ser mayor a cero.' },
   { match: 'El total debe ser un monto mayor a cero', message: 'El total debe ser mayor a cero.' },
   { match: 'no puede ser menor al monto ya pagado', message: 'El total no puede ser menor a lo que ya se ha cobrado.' },
-  { match: 'No se pueden modificar los términos financieros', message: 'No se pueden cambiar las condiciones de un trabajo completado o cancelado.' },
+  { match: 'No se pueden modificar los términos financieros', message: 'No se pueden cambiar las condiciones de una cita atendida o cancelada.' },
   { match: 'ya fue anulado', message: 'Este pago ya fue anulado.' },
   { match: 'motivo de anulación es obligatorio', message: 'Escribe el motivo de la anulación.' },
   { match: 'No autorizado', message: 'No tienes permiso para realizar esta acción.' },
