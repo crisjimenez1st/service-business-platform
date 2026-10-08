@@ -10,6 +10,9 @@ import { buildWhatsAppLink } from '../utils/whatsapp';
 import { Badge, Button, ErrorState, Card } from '../components/ui';
 import JobStatusActions from '../components/jobs/JobStatusActions';
 import CancelJobModal from '../components/jobs/CancelJobModal';
+import MedicalAlert from '../components/patients/MedicalAlert';
+import { getMedicalProfile } from '../services/medicalProfileService';
+import type { MedicalProfile } from '../types';
 import VisitRecordCard from '../components/jobs/VisitRecordCard';
 import JobPaymentsTab from '../components/payments/JobPaymentsTab';
 import AssignTechnicianSheet from '../components/calendar/AssignTechnicianSheet';
@@ -56,6 +59,7 @@ export default function JobDetailPage() {
   const [advancing, setAdvancing] = useState(false);
   const [followupOpen, setFollowupOpen] = useState(false);
   const [freedSlot, setFreedSlot] = useState<string | null>(null);
+  const [medical, setMedical] = useState<MedicalProfile | null>(null);
   const [apptResponse, setApptResponse] = useState<AppointmentResponse | null>(null);
 
   const { clientsById } = useClientsById();
@@ -99,6 +103,19 @@ export default function JobDetailPage() {
       cancelled = true;
     };
   }, [companyId, id, scheduledStartAt]);
+
+  const clinicalClientId = company?.role === 'owner' || company?.role === 'technician' ? job?.clientId : undefined;
+  useEffect(() => {
+    if (!clinicalClientId || company?.businessType === 'technical_services') return;
+    let cancelled = false;
+    (async () => {
+      const r = await getMedicalProfile(clinicalClientId);
+      if (!cancelled && !r.error) setMedical(r.data);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [clinicalClientId, company?.businessType]);
 
   useEffect(() => {
     if (companyId) loadTechnicians(companyId);
@@ -213,6 +230,8 @@ export default function JobDetailPage() {
           )}
         </Card>
       )}
+
+      {isClinic && <MedicalAlert profile={medical} />}
 
       <div className="border-b border-slate-200 overflow-x-auto">
         <div className="flex gap-1 min-w-max">

@@ -430,6 +430,24 @@ export interface Database {
         Relationships: [];
       };
 
+      /** Solo lectura (owner/doctor): escribir pasa por save_patient_medical_profile. */
+      patient_medical_profiles: {
+        Row: {
+          client_id: string;
+          company_id: string;
+          allergies: string | null;
+          medical_history: string | null;
+          medications: string | null;
+          important_notes: string | null;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+
       /** Solo lectura (owner/doctor): escribir pasa por save_visit_record. */
       visit_records: {
         Row: {
@@ -820,6 +838,16 @@ export interface Database {
           p_notes?: string | null;
         };
         Returns: Database['public']['Tables']['jobs']['Row'];
+      };
+      save_patient_medical_profile: {
+        Args: {
+          p_client_id: string;
+          p_allergies?: string | null;
+          p_medical_history?: string | null;
+          p_medications?: string | null;
+          p_important_notes?: string | null;
+        };
+        Returns: Database['public']['Tables']['patient_medical_profiles']['Row'];
       };
       save_visit_record: {
         Args: {
