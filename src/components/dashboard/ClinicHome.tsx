@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BellRing, CalendarCheck, Inbox, ChevronRight, Wallet, UserRoundCheck } from 'lucide-react';
+import { BellRing, CalendarCheck, Cake, Inbox, ChevronRight, Wallet, UserRoundCheck } from 'lucide-react';
 import { Badge, Card, ErrorState } from '../ui';
 import NewAppointmentButton from '../calendar/NewAppointmentButton';
 import { useCurrentCompany } from '../../contexts/useCurrentCompany';
@@ -12,6 +12,7 @@ import { getAppointmentResponses } from '../../services/appointmentService';
 import { countPendingRequests } from '../../services/bookingService';
 import { getReceivablesSummary } from '../../services/paymentService';
 import type { ServiceError } from '../../services/errors/serviceError';
+import { nextBirthday } from '../../utils/birthdays';
 import { addDaysToDateKey } from '../../utils/followupDates';
 import { formatCurrency } from '../../utils/currency';
 import {
@@ -40,7 +41,7 @@ export default function ClinicHome() {
   const companyId = company?.id;
   const timezone = company?.timezone ?? 'America/Managua';
   const terms = useTerms();
-  const { clientsById } = useClientsById();
+  const { clients, clientsById } = useClientsById();
   const canSeeMoney = company?.role === 'owner' || company?.role === 'office';
 
   const followupCount = useFollowupStore((s) => s.items.length);
@@ -113,6 +114,11 @@ export default function ClinicHome() {
     return h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches';
   }, [timezone]);
 
+  const birthdaysToday = useMemo(() => {
+    const todayKey = getTodayKeyInTimezone(timezone);
+    return clients.filter((cl) => cl.birthDate && nextBirthday(cl.birthDate, todayKey)?.daysUntil === 0).length;
+  }, [clients, timezone]);
+
   const todayLabel = formatLongDateInTimezone(new Date().toISOString(), timezone);
   const tomorrowPending = day ? day.tomorrow.filter((j) => !day.responses[j.id]?.response).length : 0;
   const owedText =
@@ -144,7 +150,15 @@ export default function ClinicHome() {
       </div>
 
       {/* Lo que pide atención */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <AttentionTile
+          icon={<Cake size={20} />}
+          label="Cumpleaños de hoy"
+          value={birthdaysToday === 0 ? 'Nadie' : `${birthdaysToday} ${birthdaysToday === 1 ? 'persona' : 'personas'}`}
+          highlight={birthdaysToday > 0}
+          onClick={() => navigate('/birthdays')}
+          hidden={!canSeeMoney}
+        />
         <AttentionTile
           icon={<Inbox size={20} />}
           label="Solicitudes de cita"

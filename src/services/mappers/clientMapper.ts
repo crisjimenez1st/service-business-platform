@@ -30,6 +30,7 @@ export function clientRowToDomain(row: ClientRow): Client {
     address: row.address ?? '',
     notes: row.notes ?? undefined,
     contactConsent: row.contact_consent,
+    birthDate: row.birth_date ?? undefined,
     createdAt: row.created_at,
     mapsUrl: undefined,
     totalBilled: undefined,
@@ -49,6 +50,8 @@ export interface ClientDomainInput {
   notes?: string;
   /** false = no contactar (nunca aparece en los avisos de seguimiento). Si no se indica, se asume true al crear. */
   contactConsent?: boolean;
+  /** YYYY-MM-DD; en un parche, '' borra la fecha. */
+  birthDate?: string;
 }
 
 /** Traduce datos de formulario (camelCase, sin id/companyId/timestamps) a un Insert de Supabase. */
@@ -65,6 +68,7 @@ export function clientDomainToInsertRow(
     address: input.address ?? null,
     notes: input.notes ?? null,
     contact_consent: input.contactConsent ?? true,
+    birth_date: input.birthDate || null,
   };
 }
 
@@ -80,5 +84,6 @@ export function clientDomainToUpdateRow(
   if (patch.address !== undefined) update.address = patch.address;
   if (patch.notes !== undefined) update.notes = patch.notes;
   if (patch.contactConsent !== undefined) update.contact_consent = patch.contactConsent;
+  if (patch.birthDate !== undefined) update.birth_date = patch.birthDate || null;
   return update;
 }
