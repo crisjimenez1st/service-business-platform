@@ -62,6 +62,8 @@ export interface Client {
   notes?: string;
   /** El cliente/paciente acepta recibir recordatorios (clients.contact_consent). false = no contactar. */
   contactConsent?: boolean;
+  /** Fecha de nacimiento (YYYY-MM-DD), opcional. */
+  birthDate?: string;
   createdAt: string;
   /** Campos calculados server-side en el futuro; aquí derivados en services/ */
   totalBilled?: number;

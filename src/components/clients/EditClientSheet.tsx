@@ -30,6 +30,7 @@ export default function EditClientSheet({ open, client, onClose, onSave }: EditC
   const [email, setEmail] = useState(client.email ?? '');
   const [address, setAddress] = useState(client.address ?? '');
   const [notes, setNotes] = useState(client.notes ?? '');
+  const [birthDate, setBirthDate] = useState(client.birthDate ?? '');
   const [consent, setConsent] = useState(client.contactConsent ?? true);
   const terms = useTerms();
   const [saving, setSaving] = useState(false);
@@ -61,6 +62,7 @@ export default function EditClientSheet({ open, client, onClose, onSave }: EditC
       address: address.trim() || undefined,
       notes: notes.trim() || undefined,
       contactConsent: consent,
+      birthDate,
     });
     setSaving(false);
 
@@ -153,6 +155,20 @@ export default function EditClientSheet({ open, client, onClose, onSave }: EditC
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
             className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:border-brand-500 resize-none"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="client-birth" className="block text-sm font-medium text-slate-700 mb-1.5">
+            Fecha de nacimiento (opcional)
+          </label>
+          <input
+            id="client-birth"
+            type="date"
+            value={birthDate}
+            max={new Date().toISOString().slice(0, 10)}
+            onChange={(e) => setBirthDate(e.target.value)}
+            className="w-full px-3 min-h-11 rounded-xl border border-slate-300 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:border-brand-500"
           />
         </div>
 
