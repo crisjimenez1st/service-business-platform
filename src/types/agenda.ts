@@ -86,3 +86,31 @@ export interface MedicalProfile {
 }
 
 export type MedicalProfileInput = Omit<MedicalProfile, 'clientId' | 'updatedAt'>;
+
+export type TreatmentPlanStatus = 'active' | 'completed' | 'cancelled';
+
+/** Abono de un plan de tratamiento (plan_payments, migración 022). */
+export interface PlanPayment {
+  id: string;
+  planId: string;
+  amount: number;
+  method: string;
+  paidAt: string;
+  note?: string;
+  voidedAt?: string;
+  voidReason?: string;
+}
+
+/** Plan de tratamiento con abonos (treatment_plans, migración 022). */
+export interface TreatmentPlan {
+  id: string;
+  clientId: string;
+  name: string;
+  description?: string;
+  total: number;
+  paidAmount: number;
+  currency: 'NIO' | 'USD';
+  status: TreatmentPlanStatus;
+  createdAt: string;
+  payments: PlanPayment[];
+}

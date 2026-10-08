@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, Clock, Search, Wallet } from 'lucide-react';
 import { Card, EmptyState, ErrorState } from '../components/ui';
+import { getCompanyPlans } from '../services/planService';
+import { useClientsById } from '../hooks/useClientsById';
+import type { TreatmentPlan } from '../types';
 import MetricCard from '../components/dashboard/MetricCard';
 import FilterChips from '../components/clients/FilterChips';
 import ReceivableCard from '../components/payments/ReceivableCard';
@@ -35,12 +38,26 @@ export default function CollectionsPage() {
   const error = useCollectionsStore((s) => s.error);
   const load = useCollectionsStore((s) => s.load);
 
+  const { clientsById } = useClientsById();
+  const [plans, setPlans] = useState<TreatmentPlan[]>([]);
   const [filter, setFilter] = useState<CollectionsFilter>('all');
   const [search, setSearch] = useState('');
 
   useEffect(() => {
     if (companyId && canView) load(companyId);
   }, [companyId, canView, load]);
+
+  useEffect(() => {
+    if (!companyId || !canView || company?.businessType === 'technical_services') return;
+    let cancelled = false;
+    (async () => {
+      const r = await getCompanyPlans(companyId);
+      if (!cancelled && !r.error) setPlans(r.data.filter((p) => p.status !== 'cancelled' && p.total - p.paidAmount > 0));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [companyId, canView, company?.businessType]);
 
   // Cuentas con saldo pendiente. Los pagados (saldo 0) y los cancelados
   // no son "por cobrar"; los cancelados con dinero cobrado van aparte.
@@ -192,6 +209,41 @@ export default function CollectionsPage() {
               </div>
             )}
           </section>
+
+          {plans.length > 0 && (
+            <section className="space-y-2">
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">Planes de tratamiento con saldo</h2>
+                <p className="text-xs text-slate-500 mt-0.5">Pacientes que van pagando por abonos.</p>
+              </div>
+              {plans.map((p) => (
+                <Card
+                  key={p.id}
+                  className="cursor-pointer hover:border-slate-300 transition-colors"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(`/clients/${p.clientId}?tab=plans`)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      navigate(`/clients/${p.clientId}?tab=plans`);
+                    }
+                  }}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-900 truncate">{clientsById[p.clientId]?.name ?? '—'}</p>
+                      <p className="text-xs text-slate-500 truncate">{p.name}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-xs text-slate-500">Falta</p>
+                      <p className="text-lg font-semibold text-slate-900">{formatCurrency(p.total - p.paidAmount, p.currency)}</p>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </section>
+          )}
 
           {review.length > 0 && (
             <section className="space-y-2">
