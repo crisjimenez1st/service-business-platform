@@ -64,6 +64,8 @@ export interface Client {
   contactConsent?: boolean;
   /** Fecha de nacimiento (YYYY-MM-DD), opcional. */
   birthDate?: string;
+  /** Última vez que se le pidió una reseña (ISO). */
+  reviewAskedAt?: string;
   createdAt: string;
   /** Campos calculados server-side en el futuro; aquí derivados en services/ */
   totalBilled?: number;

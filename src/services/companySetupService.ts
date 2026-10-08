@@ -64,6 +64,27 @@ export async function setBusinessType(companyId: string, businessType: BusinessT
 }
 
 /** Cambia el nombre de la clínica o del médico (solo owner, por RLS). */
+/** Guarda el enlace de reseñas de la clínica (vacío lo borra). Solo el dueño. */
+export async function setReviewUrl(companyId: string, url: string): Promise<ServiceResult<null>> {
+  const clean = url.trim();
+  if (clean && !/^https?:\/\/\S+\.\S+/i.test(clean)) {
+    return fail({ kind: 'unknown', message: 'Pega el enlace completo, que empiece con https://' });
+  }
+  try {
+    const { data, error } = await supabase
+      .from('companies')
+      .update({ review_url: clean || null })
+      .eq('id', companyId)
+      .select('id')
+      .maybeSingle();
+    if (error) return fail(mapSupabaseError(error));
+    if (!data) return fail({ kind: 'forbidden', message: 'Solo el dueño puede cambiar esto.' });
+    return ok(null);
+  } catch (err) {
+    return fail(mapSupabaseError(err));
+  }
+}
+
 export async function setCompanyName(companyId: string, name: string): Promise<ServiceResult<null>> {
   const clean = name.trim();
   if (clean.length < 2) return fail({ kind: 'unknown', message: 'Escribe un nombre de al menos 2 letras.' });
