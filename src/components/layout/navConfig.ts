@@ -78,6 +78,7 @@ export function buildNavItems(businessType: BusinessType, terms: BusinessTerms):
     ],
     secondary: [
       { label: 'Registro del mes', path: '/registry', icon: ClipboardList },
+      { label: 'Reportes', path: '/reports', icon: BarChart3 },
       { label: t.nav.settings, path: '/settings', icon: Settings },
     ],
   };
