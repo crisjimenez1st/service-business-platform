@@ -74,3 +74,15 @@ export interface VisitRecord {
 }
 
 export type VisitRecordInput = Omit<VisitRecord, 'jobId' | 'clientId' | 'updatedAt'>;
+
+/** Historial médico del paciente (patient_medical_profiles, migración 021). Solo dueño y doctores. */
+export interface MedicalProfile {
+  clientId: string;
+  allergies?: string;
+  medicalHistory?: string;
+  medications?: string;
+  importantNotes?: string;
+  updatedAt: string;
+}
+
+export type MedicalProfileInput = Omit<MedicalProfile, 'clientId' | 'updatedAt'>;

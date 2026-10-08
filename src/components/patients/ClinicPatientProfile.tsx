@@ -3,6 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, CalendarCheck, MapPin, MessageCircle, Pencil, Phone } from 'lucide-react';
 import { Badge, Card, EmptyState, ErrorState } from '../ui';
 import EditClientSheet from '../clients/EditClientSheet';
+import Tabs from '../clients/Tabs';
+import MedicalAlert from './MedicalAlert';
+import MedicalProfileCard from './MedicalProfileCard';
+import { getMedicalProfile } from '../../services/medicalProfileService';
 import { useCurrentCompany } from '../../contexts/useCurrentCompany';
 import { useTerms } from '../../hooks/useTerms';
 import { useSingleClientStore, useClientStore } from '../../store/clientStore';
@@ -13,7 +17,9 @@ import { buildWhatsAppLink } from '../../utils/whatsapp';
 import { JOB_STATUS_LABELS, JOB_STATUS_TONES } from '../../utils/jobStatus';
 import { formatLongDateInTimezone, formatTimeInTimezone } from '../../utils/timezone';
 import { t } from '../../i18n/es';
-import type { CurrencyCode, Job, VisitRecord } from '../../types';
+import type { CurrencyCode, Job, MedicalProfile, VisitRecord } from '../../types';
+
+type PatientTab = 'summary' | 'history' | 'treatments' | 'medical';
 
 /**
  * Ficha del paciente (clínicas): quién es, cuándo viene, qué se le ha hecho
@@ -36,6 +42,9 @@ export default function ClinicPatientProfile() {
   const updateClient = useClientStore((s) => s.updateClient);
 
   const [jobs, setJobs] = useState<Job[] | null>(null);
+  const canSeeClinical = company?.role === 'owner' || company?.role === 'technician';
+  const [tab, setTab] = useState<PatientTab>('summary');
+  const [medical, setMedical] = useState<MedicalProfile | null>(null);
   const [records, setRecords] = useState<Record<string, VisitRecord>>({});
   const [editOpen, setEditOpen] = useState(false);
 
@@ -51,6 +60,8 @@ export default function ClinicPatientProfile() {
       if (!cancelled) setJobs(result.error ? [] : result.data);
       const rec = await getClientVisitRecords(companyId, id);
       if (!cancelled && !rec.error) setRecords(rec.data);
+      const med = await getMedicalProfile(id);
+      if (!cancelled && !med.error) setMedical(med.data);
     })();
     return () => {
       cancelled = true;
@@ -75,8 +86,16 @@ export default function ClinicPatientProfile() {
     const history = [...list].sort((a, b) =>
       (b.scheduledStartAt ?? b.createdAt).localeCompare(a.scheduledStartAt ?? a.createdAt)
     );
-    return { next: upcoming[0], last, attendedCount: attended.length, balances: [...balances.entries()], history };
+    const treatments = [...attended].sort((a, b) => (b.scheduledStartAt ?? '').localeCompare(a.scheduledStartAt ?? ''));
+    return { treatments, next: upcoming[0], last, attendedCount: attended.length, balances: [...balances.entries()], history };
   }, [jobs]);
+
+  const tabs = [
+    { key: 'summary', label: 'Resumen' },
+    { key: 'history', label: 'Historial de citas' },
+    { key: 'treatments', label: 'Tratamientos' },
+    ...(canSeeClinical ? [{ key: 'medical', label: 'Historial médico' }] : []),
+  ];
 
   if (loading || !id || !companyId) {
     return <p className="text-center text-sm text-slate-500 py-12">{t.common.loading}</p>;
@@ -139,10 +158,16 @@ export default function ClinicPatientProfile() {
         </div>
       </Card>
 
+      {canSeeClinical && <MedicalAlert profile={medical} />}
+
+      <Tabs tabs={tabs} active={tab} onChange={(k) => setTab(k as PatientTab)} />
+
       {jobs === null ? (
         <p className="text-center text-sm text-slate-500 py-8">{t.common.loading}</p>
       ) : (
         <>
+          {tab === 'summary' && (
+            <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <Card className={summary.next ? 'border-brand-200 bg-brand-50/60' : ''}>
               <div className="flex items-center gap-1.5 text-xs text-slate-500">
@@ -181,6 +206,10 @@ export default function ClinicPatientProfile() {
             </Card>
           )}
 
+            </div>
+          )}
+
+          {tab === 'history' && (
           <section>
             <h2 className="text-base font-semibold text-slate-900 mb-2">Historial de atenciones</h2>
             {summary.history.length === 0 ? (
@@ -228,6 +257,44 @@ export default function ClinicPatientProfile() {
               </ol>
             )}
           </section>
+          )}
+
+          {tab === 'treatments' && (
+            <section>
+              <h2 className="text-base font-semibold text-slate-900 mb-1">Tratamientos realizados</h2>
+              <p className="text-sm text-slate-500 mb-3">
+                {summary.treatments.length === 0
+                  ? 'Cuando se atienda una cita, el trabajo realizado aparecerá aquí.'
+                  : `${summary.treatments.length} ${summary.treatments.length === 1 ? 'atención realizada' : 'atenciones realizadas'}`}
+              </p>
+              <ol className="space-y-2">
+                {summary.treatments.map((job) => (
+                  <li key={job.id}>
+                    <button className="w-full text-left" onClick={() => navigate(`/jobs/${job.id}`)}>
+                      <Card className="hover:border-brand-300 hover:shadow-sm transition-shadow">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="font-medium text-slate-900 truncate">{job.serviceType}</h3>
+                          <span className="text-xs text-slate-500 shrink-0">
+                            {job.scheduledStartAt ? formatLongDateInTimezone(job.scheduledStartAt, timezone) : ''}
+                          </span>
+                        </div>
+                        {records[job.id]?.treatment && (
+                          <p className="text-sm text-slate-700 mt-1 whitespace-pre-line">{records[job.id].treatment}</p>
+                        )}
+                        {records[job.id]?.nextSteps && (
+                          <p className="text-xs text-slate-500 mt-2">Próximo paso: {records[job.id].nextSteps}</p>
+                        )}
+                      </Card>
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+
+          {tab === 'medical' && canSeeClinical && (
+            <MedicalProfileCard clientId={client.id} profile={medical} timezone={timezone} onSaved={setMedical} />
+          )}
         </>
       )}
 
