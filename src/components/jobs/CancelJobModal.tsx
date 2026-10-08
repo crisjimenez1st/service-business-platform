@@ -8,7 +8,7 @@ interface CancelJobModalProps {
   onConfirm: (reason: string, category?: string) => Promise<boolean>;
 }
 
-const CATEGORY_OPTIONS: { value: string; label: string }[] = [
+const categoryOptions = (): { value: string; label: string }[] => [
   { value: 'client_request', label: t.jobsPage.cancelCategoryClientRequest },
   { value: 'no_show', label: t.jobsPage.cancelCategoryNoShow },
   { value: 'rescheduled_elsewhere', label: t.jobsPage.cancelCategoryRescheduled },
@@ -50,7 +50,7 @@ export default function CancelJobModal({ open, onClose, onConfirm }: CancelJobMo
       setCategory('');
       onClose();
     } else {
-      setError('No pudimos cancelar el trabajo. Intenta de nuevo.');
+      setError('No pudimos cancelar. Intenta de nuevo.');
     }
   }
 
@@ -96,7 +96,7 @@ export default function CancelJobModal({ open, onClose, onConfirm }: CancelJobMo
             className="w-full px-3 min-h-11 rounded-xl border border-slate-300 text-sm bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:border-brand-500"
           >
             <option value="">—</option>
-            {CATEGORY_OPTIONS.map((opt) => (
+            {categoryOptions().map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>

@@ -5,7 +5,8 @@ import { useServiceRulesStore } from '../store/serviceRulesStore';
 import { findRuleForService } from '../services/serviceRulesService';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Calendar as CalendarIcon, Pencil, MapPin } from 'lucide-react';
+import { ArrowLeft, Calendar as CalendarIcon, MapPin, MessageCircle, Pencil, Phone, UserRound, Wallet } from 'lucide-react';
+import { buildWhatsAppLink } from '../utils/whatsapp';
 import { Badge, Button, ErrorState, Card } from '../components/ui';
 import JobStatusActions from '../components/jobs/JobStatusActions';
 import CancelJobModal from '../components/jobs/CancelJobModal';
@@ -57,6 +58,8 @@ export default function JobDetailPage() {
   const [apptResponse, setApptResponse] = useState<AppointmentResponse | null>(null);
 
   const { clientsById } = useClientsById();
+  const isClinic = company?.businessType !== 'technical_services';
+  const canManage = company?.role === 'owner' || company?.role === 'office';
   const technicians = useJobStore((s) => s.technicians);
   const loadTechnicians = useJobStore((s) => s.loadTechnicians);
   const assignTechnician = useJobStore((s) => s.assignTechnician);
@@ -147,7 +150,7 @@ export default function JobDetailPage() {
 
   const financials = getJobFinancials(job, timezone);
 
-  const tabs: { key: TabKey; label: string }[] = [
+  const allTabs: { key: TabKey; label: string }[] = [
     { key: 'summary', label: t.jobDetail.tabSummary },
     { key: 'service', label: t.jobDetail.tabService },
     { key: 'schedule', label: t.jobDetail.tabSchedule },
@@ -156,12 +159,15 @@ export default function JobDetailPage() {
     { key: 'payments', label: t.jobDetail.tabPayments },
     { key: 'history', label: t.jobDetail.tabHistory },
   ];
+  // Consultorio: solo la cita y sus pagos. El historial clínico vive en la ficha del paciente.
+  const tabs = isClinic ? allTabs.filter((tab) => tab.key === 'summary' || tab.key === 'payments') : allTabs;
+  const canEditSchedule = canManage && job.status !== 'completed' && job.status !== 'cancelled';
 
   return (
     <div className="space-y-4 pb-8">
       <button
-        onClick={() => navigate('/jobs')}
-        className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700"
+        onClick={() => navigate(isClinic ? '/calendar' : '/jobs')}
+        className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 min-h-9"
       >
         <ArrowLeft size={16} />
         {t.jobDetail.backToJobs}
@@ -169,8 +175,8 @@ export default function JobDetailPage() {
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">{job.serviceType}</h1>
-          <p className="text-sm text-slate-500 mt-0.5">{client?.name ?? '—'}</p>
+          <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">{isClinic ? (client?.name ?? '—') : job.serviceType}</h1>
+          <p className="text-sm text-slate-500 mt-0.5">{isClinic ? job.serviceType : (client?.name ?? '—')}</p>
         </div>
         <Badge tone={JOB_STATUS_TONES[job.status]}>{JOB_STATUS_LABELS[job.status]}</Badge>
       </div>
@@ -229,12 +235,89 @@ export default function JobDetailPage() {
 
       {activeTab === 'summary' && (
         <div className="space-y-3">
-          <Card>
+          {isClinic && (
+            <>
+              <Card>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs text-slate-500">{t.calendar.client}</p>
+                    <p className="text-base font-semibold text-slate-900 truncate">{client?.name ?? '—'}</p>
+                    {client?.phone && <p className="text-sm text-slate-500 mt-0.5">{client.phone}</p>}
+                  </div>
+                  <UserRound size={28} className="text-brand-600 shrink-0" />
+                </div>
+                <div className="grid grid-cols-2 gap-2 mt-3">
+                  {client?.phone && (
+                    <a
+                      href={`tel:${client.phone.replace(/\s/g, '')}`}
+                      className="inline-flex items-center justify-center gap-1.5 min-h-11 text-sm rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium"
+                    >
+                      <Phone size={18} /> Llamar
+                    </a>
+                  )}
+                  {client?.whatsapp && (
+                    <a
+                      href={buildWhatsAppLink(client.whatsapp, `Hola ${client.name.split(/\s+/)[0]} 👋`)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-1.5 min-h-11 text-sm rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-medium"
+                    >
+                      <MessageCircle size={18} /> WhatsApp
+                    </a>
+                  )}
+                </div>
+                <Button variant="secondary" className="mt-2" fullWidth onClick={() => navigate(`/clients/${job.clientId}`)}>
+                  {t.calendar.viewClientProfile}
+                </Button>
+              </Card>
+
+              <Card>
+                <p className="text-xs text-slate-500 mb-1">Fecha y hora</p>
+                <p className="text-base font-semibold text-slate-900">
+                  {job.scheduledStartAt
+                    ? `${formatLongDateInTimezone(job.scheduledStartAt, timezone)} · ${formatTimeInTimezone(job.scheduledStartAt, timezone)}`
+                    : 'Todavía sin fecha'}
+                </p>
+                <p className="text-sm text-slate-600 mt-1">
+                  {t.calendar.technician}: {technicianName ?? t.calendar.unassigned}
+                </p>
+                {apptResponse?.response && (
+                  <div className="mt-2">
+                    <Badge tone={apptResponse.response === 'confirmed' ? 'success' : 'warning'}>
+                      {apptResponse.response === 'confirmed'
+                        ? apptResponse.responseSource === 'patient' ? 'Confirmó su cita' : 'Cita confirmada'
+                        : apptResponse.responseSource === 'patient' ? 'Avisó que no podrá asistir' : 'No podrá asistir'}
+                    </Badge>
+                  </div>
+                )}
+                {canEditSchedule && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <Button variant="secondary" size="sm" icon={<CalendarIcon size={16} />} onClick={() => setScheduleOpen(true)}>
+                      {job.status === 'scheduled' ? t.calendar.reschedule : t.calendar.schedule}
+                    </Button>
+                    {technicians.length > 0 && (
+                      <Button variant="secondary" size="sm" icon={<Pencil size={16} />} onClick={() => setAssignOpen(true)}>
+                        {t.calendar.assignTechnician}
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </Card>
+
+              {job.notes && (
+                <Card>
+                  <p className="text-xs text-slate-500 mb-1">Notas de la cita</p>
+                  <p className="text-sm text-slate-700 whitespace-pre-line">{job.notes}</p>
+                </Card>
+              )}
+            </>
+          )}
+          {!isClinic && <Card>
             <p className="text-xs text-slate-500">{t.calendar.client}</p>
             <p className="text-sm font-medium text-slate-900">{client?.name ?? '—'}</p>
             {client?.phone && <p className="text-sm text-slate-500 mt-1">{client.phone}</p>}
-          </Card>
-          {job.scheduledStartAt && (
+          </Card>}
+          {!isClinic && job.scheduledStartAt && (
             <Card>
               <p className="text-xs text-slate-500 mb-1">{t.jobDetail.tabSchedule}</p>
               <p className="text-sm text-slate-900">
@@ -280,6 +363,20 @@ export default function JobDetailPage() {
                 </Badge>
                 {financials.isOverdue && <Badge tone="danger">{t.payments.overdueBadge}</Badge>}
               </div>
+              {isClinic && canManage && job.status !== 'cancelled' && financials.balance > 0 && (
+                <Button className="mt-3" fullWidth icon={<Wallet size={18} />} onClick={() => setActiveTab('payments')}>
+                  Registrar pago
+                </Button>
+              )}
+            </Card>
+          )}
+          {isClinic && canManage && !financials.hasTotal && job.status !== 'cancelled' && (
+            <Card>
+              <p className="text-sm font-medium text-slate-900">Esta cita no tiene precio</p>
+              <p className="text-sm text-slate-500 mt-1">Ponle un precio para poder registrar los pagos del paciente.</p>
+              <Button className="mt-3" variant="secondary" onClick={() => setActiveTab('payments')}>
+                Definir precio
+              </Button>
             </Card>
           )}
           {job.jobDraftId && <p className="text-xs text-slate-400">{t.jobDetail.createdFrom}</p>}

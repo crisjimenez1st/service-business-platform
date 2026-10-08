@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 import { CompanyContext, type CurrentCompany } from './companyContextDefinition';
 import type { BusinessType } from '../types';
+import { applyBusinessCopy } from '../i18n/applyBusinessCopy';
 
 /**
  * Resuelve la empresa activa del usuario autenticado consultando
@@ -90,6 +91,8 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // El vocabulario (cita/doctor/paciente) se fija antes de pintar las pantallas.
+    applyBusinessCopy(companyRow.business_type as BusinessType);
     setCompany({
       id: companyRow.id,
       name: companyRow.name,

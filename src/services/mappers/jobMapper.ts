@@ -71,7 +71,7 @@ export function myAssignedJobRowToDomain(row: MyAssignedJobRow): MyAssignedJob {
 export function companyTechnicianRowToDomain(row: CompanyTechnicianRow): CompanyTechnician {
   return {
     userId: row.user_id,
-    displayName: row.display_name ?? row.email ?? 'Técnico',
+    displayName: row.display_name ?? row.email ?? 'Doctor',
     email: row.email ?? '',
   };
 }
