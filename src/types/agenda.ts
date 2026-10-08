@@ -114,3 +114,27 @@ export interface TreatmentPlan {
   createdAt: string;
   payments: PlanPayment[];
 }
+
+// ---------- Solicitudes de cita (enlace público) ----------
+
+export type AppointmentRequestStatus = 'pending' | 'handled' | 'dismissed';
+
+export interface AppointmentRequest {
+  id: string;
+  name: string;
+  phone: string;
+  /** Últimos 8 dígitos del teléfono: sirve para reconocer a un paciente existente. */
+  phoneKey: string;
+  service: string;
+  preferred?: string;
+  note?: string;
+  status: AppointmentRequestStatus;
+  createdAt: string;
+}
+
+export interface PublicBooking {
+  companyName: string;
+  companyLogoUrl?: string;
+  companyPhone?: string;
+  services: string[];
+}

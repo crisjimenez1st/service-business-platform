@@ -14,6 +14,9 @@ export interface CurrentCompany {
   /** Fin de la prueba gratis y fecha hasta la que está pagado el plan (migración 018). */
   trialEndsAt: string | null;
   paidUntil: string | null;
+  /** Enlace público para pedir cita (migración 023). */
+  bookingToken: string;
+  bookingEnabled: boolean;
   role: CompanyMemberRoleDb;
 }
 

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BellRing, CalendarCheck, ChevronRight, Wallet, UserRoundCheck } from 'lucide-react';
+import { BellRing, CalendarCheck, Inbox, ChevronRight, Wallet, UserRoundCheck } from 'lucide-react';
 import { Badge, Card, ErrorState } from '../ui';
 import NewAppointmentButton from '../calendar/NewAppointmentButton';
 import { useCurrentCompany } from '../../contexts/useCurrentCompany';
@@ -9,6 +9,7 @@ import { useTerms } from '../../hooks/useTerms';
 import { useFollowupStore } from '../../store/followupStore';
 import * as jobService from '../../services/jobService';
 import { getAppointmentResponses } from '../../services/appointmentService';
+import { countPendingRequests } from '../../services/bookingService';
 import { getReceivablesSummary } from '../../services/paymentService';
 import type { ServiceError } from '../../services/errors/serviceError';
 import { addDaysToDateKey } from '../../utils/followupDates';
@@ -50,6 +51,7 @@ export default function ClinicHome() {
   const [day, setDay] = useState<DayData | null>(null);
   const [error, setError] = useState<ServiceError | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [requestCount, setRequestCount] = useState(0);
   const [owed, setOwed] = useState<{ currency: CurrencyCode; outstanding: number }[] | null>(null);
 
   useEffect(() => {
@@ -95,6 +97,9 @@ export default function ClinicHome() {
   useEffect(() => {
     if (!companyId || !canSeeMoney) return;
     let cancelled = false;
+    countPendingRequests(companyId).then((r) => {
+      if (!cancelled && !r.error) setRequestCount(r.data);
+    });
     getReceivablesSummary(companyId).then((r) => {
       if (!cancelled && !r.error) setOwed(r.data.map((x) => ({ currency: x.currency, outstanding: x.outstanding })));
     });
@@ -139,7 +144,15 @@ export default function ClinicHome() {
       </div>
 
       {/* Lo que pide atención */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <AttentionTile
+          icon={<Inbox size={20} />}
+          label="Solicitudes de cita"
+          value={requestCount === 0 ? 'Ninguna' : `${requestCount} ${requestCount === 1 ? 'nueva' : 'nuevas'}`}
+          highlight={requestCount > 0}
+          onClick={() => navigate('/requests')}
+          hidden={!canSeeMoney}
+        />
         <AttentionTile
           icon={<BellRing size={20} />}
           label="Hoy toca avisar"
