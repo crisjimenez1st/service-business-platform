@@ -1,7 +1,7 @@
 import { fail, ok, type ServiceResult } from './errors/serviceError';
 import type { ExchangeRate } from '../utils/exchange';
 
-const UNAVAILABLE = 'No pudimos obtener la tasa del Banco Central. Puedes escribirla tú.';
+const UNAVAILABLE = 'Escribe la tasa oficial de hoy (la publica el Banco Central).';
 
 /** Tasa oficial del BCN del día, vía la función de Netlify (el navegador no puede llamar al BCN directo). */
 export async function getOfficialRate(): Promise<ServiceResult<ExchangeRate>> {
