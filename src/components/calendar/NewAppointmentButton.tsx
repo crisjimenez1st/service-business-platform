@@ -43,7 +43,8 @@ export default function NewAppointmentButton({ onCreated, className = '' }: { on
           timezone={company?.timezone ?? 'America/Managua'}
           currency={company?.currency === 'USD' ? 'USD' : 'NIO'}
           onClose={() => setOpen(false)}
-          onCreateClient={async ({ name, phone }) => (await createClient({ name, phone }))?.id ?? null}
+          requireBirthDate={company?.businessType === 'dental' || company?.businessType === 'medical'}
+          onCreateClient={async (input) => (await createClient(input))?.id ?? null}
           onSave={async (input) => {
             const result = await createAppointment(companyId, input);
             if (result.error) return result.error.message;

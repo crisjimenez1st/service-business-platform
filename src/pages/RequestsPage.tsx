@@ -77,18 +77,10 @@ export default function RequestsPage() {
     else await reload();
   }
 
-  async function startScheduling(req: AppointmentRequest) {
+  function startScheduling(req: AppointmentRequest) {
     setActionError(null);
-    let clientId = findClientId(req);
-    if (!clientId) {
-      const created = await createClient({ name: req.name, phone: req.phone });
-      clientId = created?.id ?? null;
-      if (!clientId) {
-        setActionError(`No se pudo crear al ${terms.client.toLowerCase()}. Intenta de nuevo.`);
-        return;
-      }
-    }
-    setScheduling({ req, clientId });
+    // Si aún no es paciente, la hoja abre el alta con sus datos y le pide la fecha de nacimiento.
+    setScheduling({ req, clientId: findClientId(req) });
   }
 
   return (
@@ -174,8 +166,11 @@ export default function RequestsPage() {
           currency={company.currency === 'USD' ? 'USD' : 'NIO'}
           initialClientId={scheduling.clientId}
           initialService={scheduling.req.service}
+          initialNewName={scheduling.req.name}
+          initialNewPhone={scheduling.req.phone}
+          requireBirthDate
           onClose={() => setScheduling(null)}
-          onCreateClient={async ({ name, phone }) => (await createClient({ name, phone }))?.id ?? null}
+          onCreateClient={async (input) => (await createClient(input))?.id ?? null}
           onSave={async (input) => {
             const result = await createAppointment(companyId, input);
             if (result.error) return result.error.message;

@@ -19,6 +19,8 @@ export interface CurrentCompany {
   bookingEnabled: boolean;
   /** Enlace donde el paciente deja su reseña (migración 025). */
   reviewUrl: string | null;
+  /** Promoción que se ofrece a quien cumple años (migración 026). */
+  birthdayPromo: string | null;
   role: CompanyMemberRoleDb;
 }
 

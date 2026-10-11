@@ -63,6 +63,7 @@ export interface Database {
           booking_token: string;
           booking_enabled: boolean;
           review_url: string | null;
+          birthday_promo: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -71,6 +72,7 @@ export interface Database {
           name: string;
           booking_enabled?: boolean;
           review_url?: string | null;
+          birthday_promo?: string | null;
           slug?: string | null;
           phone?: string | null;
           whatsapp?: string | null;
