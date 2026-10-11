@@ -12,9 +12,10 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANT_CLASSES: Record<Variant, string> = {
-  primary: 'bg-brand-600 text-white hover:bg-brand-700 active:bg-brand-800',
-  secondary: 'bg-slate-100 text-slate-700 hover:bg-slate-200 active:bg-slate-300',
-  ghost: 'bg-transparent text-slate-600 hover:bg-slate-100 active:bg-slate-200',
+  primary:
+    'bg-gradient-to-r from-brand-600 to-flow-violet text-white shadow-sm shadow-brand-600/25 hover:brightness-110 active:brightness-95',
+  secondary: 'bg-flow-lilac text-brand-800 hover:bg-[#e2deff] active:bg-[#d6d0ff]',
+  ghost: 'bg-transparent text-slate-600 hover:bg-flow-lilac active:bg-[#e2deff]',
   danger: 'bg-red-50 text-red-700 hover:bg-red-100 active:bg-red-200',
   success: 'bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800',
 };
@@ -39,7 +40,7 @@ export default function Button({
     <button
       className={[
         'inline-flex items-center justify-center rounded-xl font-medium',
-        'transition-colors duration-150',
+        'transition-all duration-150',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2',
         'disabled:opacity-50 disabled:cursor-not-allowed',
         VARIANT_CLASSES[variant],

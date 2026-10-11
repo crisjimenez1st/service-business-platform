@@ -30,6 +30,8 @@ export interface NavItem {
   shortLabel?: string;
   path: string;
   icon: ComponentType<{ size?: number; className?: string }>;
+  /** Sección del panel "Más" (solo clínicas). */
+  group?: string;
 }
 
 export const MORE_NAV_ITEM: NavItem = { label: t.nav.more, path: '/more', icon: MoreHorizontal };
@@ -81,13 +83,13 @@ export function buildNavItems(businessType: BusinessType, terms: BusinessTerms):
       { label: 'Pagos', path: '/collections', icon: Wallet },
     ],
     secondary: [
-      { label: 'Servicios y precios', path: '/services', icon: ListChecks },
-      { label: 'Solicitudes de cita', path: '/requests', icon: Inbox },
-      { label: 'Reseñas', path: '/reviews', icon: Star },
-      { label: 'Marketing', path: '/birthdays', icon: Megaphone },
-      { label: 'Registro del mes', path: '/registry', icon: ClipboardList },
-      { label: 'Reportes', path: '/reports', icon: BarChart3 },
-      { label: t.nav.settings, path: '/settings', icon: Settings },
+      { label: 'Servicios y precios', path: '/services', icon: ListChecks, group: 'Mi clínica' },
+      { label: 'Solicitudes de cita', path: '/requests', icon: Inbox, group: 'Mi clínica' },
+      { label: 'Reseñas', path: '/reviews', icon: Star, group: 'Crecimiento' },
+      { label: 'Marketing', path: '/birthdays', icon: Megaphone, group: 'Crecimiento' },
+      { label: 'Registro del mes', path: '/registry', icon: ClipboardList, group: 'Análisis' },
+      { label: 'Reportes', path: '/reports', icon: BarChart3, group: 'Análisis' },
+      { label: t.nav.settings, path: '/settings', icon: Settings, group: 'Cuenta' },
     ],
   };
 }

@@ -16,6 +16,9 @@
   --color-flow-teal: #00d1c1;
   --color-flow-violet: #8a3ffc;
   --color-flow-lilac: #edebff;
+  --color-flow-ink: #0b1437;
+  --color-flow-ink-2: #14246b;
+  --color-surface: #f7f6ff;
   --font-brand: "Outfit", ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -25,6 +28,24 @@ html {
 
 body {
   overscroll-behavior-y: none;
+  font-family: var(--font-brand);
+  background-color: var(--color-surface);
+  color: #0f172a;
+}
+
+/* Portada oscura de marca: azul noche con brillos turquesa y violeta. */
+.bg-flow-hero {
+  background-color: var(--color-flow-ink);
+  background-image:
+    radial-gradient(60% 80% at 100% 0%, rgb(138 63 252 / 0.45), transparent 60%),
+    radial-gradient(50% 70% at 0% 100%, rgb(0 209 193 / 0.35), transparent 60%),
+    linear-gradient(135deg, var(--color-flow-ink) 0%, var(--color-flow-ink-2) 100%);
+}
+.text-flow-gradient {
+  background-image: linear-gradient(90deg, #4da3ff, #00d1c1 55%, #b58cff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* Oculta la barra de scroll en filas horizontales (chips, tabs) sin
