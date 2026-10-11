@@ -10,28 +10,6 @@ import type { ClinicService, CurrencyCode } from '../types';
 
 const NO_CATEGORY = 'Sin tipo';
 
-const STARTERS: Record<'dental' | 'medical', { name: string; category: string }[]> = {
-  dental: [
-    { name: 'Consulta y valoración', category: 'Diagnóstico' },
-    { name: 'Radiografía', category: 'Diagnóstico' },
-    { name: 'Limpieza dental', category: 'Prevención' },
-    { name: 'Aplicación de flúor', category: 'Prevención' },
-    { name: 'Resina (empaste)', category: 'Restauración' },
-    { name: 'Extracción', category: 'Cirugía' },
-    { name: 'Endodoncia', category: 'Endodoncia' },
-    { name: 'Blanqueamiento', category: 'Estética' },
-    { name: 'Control de ortodoncia', category: 'Ortodoncia' },
-  ],
-  medical: [
-    { name: 'Consulta general', category: 'Consulta' },
-    { name: 'Control', category: 'Consulta' },
-    { name: 'Certificado médico', category: 'Documentos' },
-    { name: 'Curación', category: 'Procedimientos' },
-    { name: 'Inyección', category: 'Procedimientos' },
-    { name: 'Toma de presión y glucosa', category: 'Procedimientos' },
-  ],
-};
-
 /** Catálogo de servicios y precios: lo que ofrece el consultorio, por tipo de tratamiento (solo dueño y recepción). */
 export default function ServicesPage() {
   const { company } = useCurrentCompany();
@@ -55,7 +33,9 @@ export default function ServicesPage() {
   const [error, setError] = useState<string | null>(null);
   const [pageError, setPageError] = useState<string | null>(null);
 
-  const canUse = company?.role === 'owner' || company?.role === 'office';
+  const canUse = company?.role === 'owner' || company?.role === 'office' || company?.role === 'technician';
+  // Cada consultorio ofrece cosas distintas: lo define el dueño o el doctor. La recepción solo consulta.
+  const canEdit = company?.role === 'owner' || company?.role === 'technician';
 
   useEffect(() => {
     if (companyId && canUse) load(companyId);
@@ -80,7 +60,7 @@ export default function ServicesPage() {
   }, [services, query]);
 
   if (!company || !canUse) {
-    return <EmptyState title="Sin acceso" description="Los servicios y precios los gestiona el dueño o la recepción." />;
+    return <EmptyState title="Sin acceso" description="Los servicios y precios los ve el equipo de la clínica." />;
   }
 
   function openNew() {
@@ -123,33 +103,22 @@ export default function ServicesPage() {
     if (err) setPageError(err.message);
   }
 
-  async function addStarters() {
-    if (company?.businessType !== 'dental' && company?.businessType !== 'medical') return;
-    setPageError(null);
-    for (const item of STARTERS[company.businessType]) {
-      const err = await create({ name: item.name, category: item.category });
-      if (err) {
-        setPageError(err.message);
-        return;
-      }
-    }
-  }
-
-  const canStarters = company.businessType === 'dental' || company.businessType === 'medical';
-
   return (
     <div className="space-y-4 pb-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">Servicios y precios</h1>
           <p className="text-sm text-slate-600 mt-1">
-            Lo que ofreces, por tipo de tratamiento. Al agendar una cita eliges el servicio y el precio se completa solo.
+            Lo que ofrece el consultorio, por tipo de tratamiento. Al agendar una cita se elige el servicio y el precio se completa solo.
           </p>
+          {!canEdit && <p className="text-xs text-slate-500 mt-1">Los servicios y precios los define el doctor.</p>}
         </div>
-        <Button onClick={openNew}>
-          <Plus size={18} className="mr-1.5" />
-          Nuevo servicio
-        </Button>
+        {canEdit && (
+          <Button onClick={openNew}>
+            <Plus size={18} className="mr-1.5" />
+            Nuevo servicio
+          </Button>
+        )}
       </div>
 
       {services.length > 0 && (
@@ -175,7 +144,7 @@ export default function ServicesPage() {
       ) : services.length === 0 ? (
         <EmptyState
           title="Aún no tienes servicios"
-          description="Agrega lo que ofreces con su precio. Así, al agendar solo lo buscas y eliges."
+          description={canEdit ? 'Agrega lo que ofreces con su precio. Así, al agendar solo lo buscas y eliges.' : 'Pídele al doctor que agregue los servicios y sus precios.'}
         />
       ) : groups.length === 0 ? (
         <EmptyState title="Sin resultados" description="Prueba con otra palabra." />
@@ -195,6 +164,7 @@ export default function ServicesPage() {
                       {!s.active && <Badge>Desactivado</Badge>}
                     </div>
                   </div>
+                  {canEdit && (
                   <div className="flex gap-1 shrink-0">
                     <button
                       type="button"
@@ -213,20 +183,12 @@ export default function ServicesPage() {
                       <Trash2 size={16} />
                     </button>
                   </div>
+                  )}
                 </div>
               ))}
             </Card>
           </section>
         ))
-      )}
-
-      {services.length === 0 && !loading && !loadError && canStarters && (
-        <div className="text-center">
-          <Button variant="secondary" onClick={addStarters}>
-            Cargar servicios comunes (sin precio)
-          </Button>
-          <p className="text-xs text-slate-500 mt-2">Después solo les pones el precio y borras lo que no ofrezcas.</p>
-        </div>
       )}
 
       {editing && (

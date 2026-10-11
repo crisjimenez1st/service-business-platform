@@ -4,10 +4,12 @@
 -- Lista de lo que la clínica ofrece (limpieza, consulta, ortodoncia...),
 -- con categoría (tipo de tratamiento) y precio. Al agendar una cita se
 -- elige de esta lista y el precio se completa solo (se puede cambiar).
--- Solo dueño y recepción ven y editan precios. La página pública de
--- "pedir cita" usa los nombres de los servicios activos (sin precios).
+-- Cada consultorio ofrece cosas distintas: el catálogo lo escribe el dueño o
+-- el doctor (rol technician). La recepción solo lo lee, para agendar.
+-- La página pública de "pedir cita" usa los nombres de los servicios activos
+-- (sin precios). Este archivo se puede ejecutar más de una vez.
 
-create table clinic_services (
+create table if not exists clinic_services (
   id uuid primary key default gen_random_uuid(),
   company_id uuid not null references companies(id) on delete cascade,
   name text not null,
@@ -28,20 +30,25 @@ create table clinic_services (
   constraint clinic_services_unique_name unique (company_id, service_key)
 );
 
-create index idx_clinic_services_company on clinic_services (company_id, active);
+create index if not exists idx_clinic_services_company on clinic_services (company_id, active);
 
 alter table clinic_services enable row level security;
 
+drop policy if exists clinic_services_select on clinic_services;
+drop policy if exists clinic_services_insert on clinic_services;
+drop policy if exists clinic_services_update on clinic_services;
+drop policy if exists clinic_services_delete on clinic_services;
+
 create policy clinic_services_select on clinic_services
-  for select using (has_role_in_company(company_id, array['owner', 'office']));
+  for select using (has_role_in_company(company_id, array['owner', 'office', 'technician']));
 create policy clinic_services_insert on clinic_services
-  for insert with check (has_role_in_company(company_id, array['owner', 'office']));
+  for insert with check (has_role_in_company(company_id, array['owner', 'technician']));
 create policy clinic_services_update on clinic_services
   for update
-  using (has_role_in_company(company_id, array['owner', 'office']))
-  with check (has_role_in_company(company_id, array['owner', 'office']));
+  using (has_role_in_company(company_id, array['owner', 'technician']))
+  with check (has_role_in_company(company_id, array['owner', 'technician']));
 create policy clinic_services_delete on clinic_services
-  for delete using (has_role_in_company(company_id, array['owner', 'office']));
+  for delete using (has_role_in_company(company_id, array['owner', 'technician']));
 
 grant select, insert, update, delete on clinic_services to authenticated;
 
