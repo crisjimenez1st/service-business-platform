@@ -177,8 +177,14 @@ export default function JobDetailPage() {
     { key: 'payments', label: t.jobDetail.tabPayments },
     { key: 'history', label: t.jobDetail.tabHistory },
   ];
-  // Consultorio: solo la cita y sus pagos. El historial clínico vive en la ficha del paciente.
-  const tabs = isClinic ? allTabs.filter((tab) => tab.key === 'summary' || tab.key === 'payments') : allTabs;
+  // Consultorio: la cita, la atención clínica (solo dueño y doctor) y los pagos (solo dueño y recepción).
+  const canSeeClinical = company?.role === 'owner' || company?.role === 'technician';
+  const clinicTabs: { key: TabKey; label: string }[] = [
+    { key: 'summary', label: 'La cita' },
+    ...(canSeeClinical ? [{ key: 'record' as TabKey, label: 'Atención' }] : []),
+    ...(canManage ? [{ key: 'payments' as TabKey, label: t.jobDetail.tabPayments }] : []),
+  ];
+  const tabs = isClinic ? clinicTabs : allTabs;
   const canEditSchedule = canManage && job.status !== 'completed' && job.status !== 'cancelled';
 
   return (
