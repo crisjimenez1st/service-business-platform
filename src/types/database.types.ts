@@ -673,6 +673,21 @@ export interface Database {
         Relationships: [];
       };
 
+      record_access_log: {
+        Row: {
+          id: string;
+          company_id: string;
+          user_id: string;
+          client_id: string | null;
+          client_name: string;
+          kind: string;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+
       currency_changes: {
         Row: {
           id: string;
@@ -711,6 +726,14 @@ export interface Database {
       create_company_for_current_user: {
         Args: { p_company_name: string; p_business_type?: string };
         Returns: string;
+      };
+      log_record_access: {
+        Args: { p_company_id: string; p_client_id: string; p_kind: string };
+        Returns: undefined;
+      };
+      get_access_log: {
+        Args: { p_company_id: string; p_limit?: number };
+        Returns: { created_at: string; kind: string; client_name: string; user_email: string | null; user_role: string | null }[];
       };
       change_company_currency: {
         Args: { p_company_id: string; p_currency: string; p_rate: number; p_rate_date: string; p_rate_source?: string };

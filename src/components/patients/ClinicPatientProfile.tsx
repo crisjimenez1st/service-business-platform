@@ -7,11 +7,14 @@ import Tabs from '../clients/Tabs';
 import MedicalAlert from './MedicalAlert';
 import PlansPanel from '../plans/PlansPanel';
 import MedicalProfileCard from './MedicalProfileCard';
+import PatientDataCard from './PatientDataCard';
+import { logRecordAccess } from '../../services/accessLogService';
 import { getMedicalProfile } from '../../services/medicalProfileService';
 import { useCurrentCompany } from '../../contexts/useCurrentCompany';
 import { useTerms } from '../../hooks/useTerms';
 import { useSingleClientStore, useClientStore } from '../../store/clientStore';
 import { getClientJobs } from '../../services/jobService';
+import { deleteClient as deleteClientRow } from '../../services/clientService';
 import { getClientVisitRecords } from '../../services/visitRecordService';
 import { formatCurrency } from '../../utils/currency';
 import { buildWhatsAppLink } from '../../utils/whatsapp';
@@ -69,6 +72,11 @@ export default function ClinicPatientProfile() {
       cancelled = true;
     };
   }, [id, companyId]);
+
+  // Constancia de quién abre el historial clínico (solo se anota al entrar a esa pestaña).
+  useEffect(() => {
+    if (tab === 'medical' && canSeeClinical && id && companyId) void logRecordAccess(companyId, id, 'view_clinical');
+  }, [tab, canSeeClinical, id, companyId]);
 
   const summary = useMemo(() => {
     const list = jobs ?? [];
@@ -209,6 +217,23 @@ export default function ClinicPatientProfile() {
             </Card>
           )}
 
+              {company?.role === 'owner' && (
+                <PatientDataCard
+                  companyId={companyId}
+                  companyName={company.name}
+                  timezone={timezone}
+                  client={client}
+                  jobs={jobs}
+                  records={records}
+                  medical={medical}
+                  onDelete={async () => {
+                    const result = await deleteClientRow(client.id, companyId);
+                    if (result.error) return false;
+                    navigate('/clients', { replace: true });
+                    return true;
+                  }}
+                />
+              )}
             </div>
           )}
 
