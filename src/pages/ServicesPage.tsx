@@ -10,6 +10,72 @@ import type { ClinicService, CurrencyCode } from '../types';
 
 const NO_CATEGORY = 'Sin tipo';
 
+interface Starter { name: string; category: string }
+interface StarterPack { key: string; label: string; hint: string; types: ('dental' | 'medical')[]; items: Starter[] }
+
+/** Servicios comunes por especialidad. Se cargan sin precio: el doctor los ajusta y borra lo que no ofrezca. */
+const STARTER_PACKS: StarterPack[] = [
+  {
+    key: 'dentist',
+    label: 'Dentista general',
+    hint: 'Consulta, limpieza, resinas, extracciones, endodoncia, coronas…',
+    types: ['dental'],
+    items: [
+      { name: 'Consulta y valoración', category: 'Diagnóstico' },
+      { name: 'Radiografía periapical', category: 'Diagnóstico' },
+      { name: 'Radiografía panorámica', category: 'Diagnóstico' },
+      { name: 'Limpieza dental', category: 'Prevención' },
+      { name: 'Aplicación de flúor', category: 'Prevención' },
+      { name: 'Sellantes', category: 'Prevención' },
+      { name: 'Resina (empaste)', category: 'Restauración' },
+      { name: 'Corona', category: 'Rehabilitación' },
+      { name: 'Prótesis removible', category: 'Rehabilitación' },
+      { name: 'Extracción simple', category: 'Cirugía' },
+      { name: 'Extracción de muela del juicio', category: 'Cirugía' },
+      { name: 'Endodoncia', category: 'Endodoncia' },
+      { name: 'Blanqueamiento', category: 'Estética' },
+      { name: 'Urgencia dental', category: 'Urgencias' },
+    ],
+  },
+  {
+    key: 'ortho',
+    label: 'Ortodoncia',
+    hint: 'Estudio, brackets, alineadores, controles, retenedores…',
+    types: ['dental'],
+    items: [
+      { name: 'Consulta y estudio de ortodoncia', category: 'Diagnóstico' },
+      { name: 'Estudio fotográfico y radiográfico', category: 'Diagnóstico' },
+      { name: 'Instalación de brackets metálicos', category: 'Instalación' },
+      { name: 'Instalación de brackets estéticos', category: 'Instalación' },
+      { name: 'Alineadores transparentes', category: 'Instalación' },
+      { name: 'Control mensual de ortodoncia', category: 'Controles' },
+      { name: 'Cambio de arco y ligas', category: 'Controles' },
+      { name: 'Retiro de aparatos', category: 'Finalización' },
+      { name: 'Retenedores', category: 'Finalización' },
+      { name: 'Reparación de bracket', category: 'Urgencias' },
+    ],
+  },
+  {
+    key: 'medical',
+    label: 'Médico general',
+    hint: 'Consultas, certificados, curaciones, inyecciones, chequeo…',
+    types: ['medical'],
+    items: [
+      { name: 'Consulta general', category: 'Consulta' },
+      { name: 'Consulta de control', category: 'Consulta' },
+      { name: 'Consulta de urgencia', category: 'Consulta' },
+      { name: 'Chequeo general', category: 'Prevención' },
+      { name: 'Certificado médico', category: 'Documentos' },
+      { name: 'Constancia médica', category: 'Documentos' },
+      { name: 'Curación', category: 'Procedimientos' },
+      { name: 'Sutura', category: 'Procedimientos' },
+      { name: 'Inyección intramuscular', category: 'Procedimientos' },
+      { name: 'Nebulización', category: 'Procedimientos' },
+      { name: 'Toma de presión y glucosa', category: 'Procedimientos' },
+    ],
+  },
+];
+
 /** Catálogo de servicios y precios: lo que ofrece el consultorio, por tipo de tratamiento (solo dueño y recepción). */
 export default function ServicesPage() {
   const { company } = useCurrentCompany();
@@ -32,6 +98,9 @@ export default function ServicesPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pageError, setPageError] = useState<string | null>(null);
+  const [packsOpen, setPacksOpen] = useState(false);
+  const [packBusy, setPackBusy] = useState(false);
+  const [packNotice, setPackNotice] = useState<string | null>(null);
 
   const canUse = company?.role === 'owner' || company?.role === 'office' || company?.role === 'technician';
   // Cada consultorio ofrece cosas distintas: lo define el dueño o el doctor. La recepción solo consulta.
@@ -97,6 +166,25 @@ export default function ServicesPage() {
     setEditing(null);
   }
 
+  async function loadPack(pack: StarterPack) {
+    setPackBusy(true);
+    setPageError(null);
+    const existing = new Set(services.map((s) => normalizeServiceKey(s.name)));
+    let added = 0;
+    for (const item of pack.items) {
+      if (existing.has(normalizeServiceKey(item.name))) continue;
+      const err = await create({ name: item.name, category: item.category });
+      if (err) {
+        setPageError(err.message);
+        break;
+      }
+      added += 1;
+    }
+    setPackBusy(false);
+    setPackNotice(added === 0 ? 'Ya tenías todos esos servicios.' : `Se agregaron ${added} servicios. Ahora ponles el precio y borra los que no ofrezcas.`);
+    setPacksOpen(false);
+  }
+
   async function handleDelete(s: ClinicService) {
     setPageError(null);
     const err = await remove(s.id);
@@ -114,10 +202,15 @@ export default function ServicesPage() {
           {!canEdit && <p className="text-xs text-slate-500 mt-1">Los servicios y precios los define el doctor.</p>}
         </div>
         {canEdit && (
-          <Button onClick={openNew}>
-            <Plus size={18} className="mr-1.5" />
-            Nuevo servicio
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" onClick={() => { setPackNotice(null); setPacksOpen(true); }}>
+              Cargar servicios comunes
+            </Button>
+            <Button onClick={openNew}>
+              <Plus size={18} className="mr-1.5" />
+              Nuevo servicio
+            </Button>
+          </div>
         )}
       </div>
 
@@ -135,6 +228,7 @@ export default function ServicesPage() {
         </div>
       )}
 
+      {packNotice && <p role="status" className="text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">{packNotice}</p>}
       {pageError && <p role="alert" className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{pageError}</p>}
 
       {loadError ? (
@@ -189,6 +283,29 @@ export default function ServicesPage() {
             </Card>
           </section>
         ))
+      )}
+
+      {packsOpen && (
+        <Sheet open onClose={() => !packBusy && setPacksOpen(false)} title="Cargar servicios comunes">
+          <div className="space-y-3">
+            <p className="text-sm text-slate-600">
+              Elige tu especialidad. Se agregan los servicios más comunes, sin precio, y los que ya tengas no se repiten. Luego ajustas todo a lo que tú ofreces.
+            </p>
+            {STARTER_PACKS.filter((p) => company.businessType === 'dental' || company.businessType === 'medical' ? p.types.includes(company.businessType) : true).map((pack) => (
+              <button
+                key={pack.key}
+                type="button"
+                disabled={packBusy}
+                onClick={() => loadPack(pack)}
+                className="w-full text-left rounded-2xl border border-slate-200 bg-white px-4 py-3 hover:bg-slate-50 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              >
+                <span className="block font-semibold text-slate-900">{pack.label} <span className="font-normal text-slate-500">· {pack.items.length} servicios</span></span>
+                <span className="block text-sm text-slate-500 mt-0.5">{pack.hint}</span>
+              </button>
+            ))}
+            {packBusy && <p className="text-sm text-slate-500">Agregando…</p>}
+          </div>
+        </Sheet>
       )}
 
       {editing && (
