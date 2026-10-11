@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './layouts/AppLayout';
 import ProtectedRoute from './components/layout/ProtectedRoute';
+import LegalPage from './pages/LegalPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
@@ -52,6 +53,8 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/terminos" element={<LegalPage kind="terms" />} />
+            <Route path="/privacidad" element={<LegalPage kind="privacy" />} />
             <Route path="/onboarding" element={<OnboardingPage />} />
 
             {/*

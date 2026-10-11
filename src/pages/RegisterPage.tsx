@@ -1,3 +1,4 @@
+import { PASSWORD_HINT, validatePassword } from '../utils/password';
 import AuthShell from '../components/brand/AuthShell';
 import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -14,6 +15,7 @@ export default function RegisterPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [checkEmail, setCheckEmail] = useState(false);
@@ -28,8 +30,13 @@ export default function RegisterPage() {
       setError('Escribe tu correo.');
       return;
     }
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.');
+    const pwError = validatePassword(password);
+    if (pwError) {
+      setError(pwError);
+      return;
+    }
+    if (!accepted) {
+      setError('Para crear tu cuenta acepta los Términos y la Política de privacidad.');
       return;
     }
     setSubmitting(true);
@@ -92,10 +99,30 @@ export default function RegisterPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className={INPUT}
-                    placeholder="Mínimo 6 caracteres"
+                    placeholder={PASSWORD_HINT}
                   />
                 </div>
               </div>
+
+              <label className="flex items-start gap-2.5 text-sm text-slate-600">
+                <input
+                  type="checkbox"
+                  checked={accepted}
+                  onChange={(e) => setAccepted(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 focus-visible:ring-2 focus-visible:ring-brand-500"
+                />
+                <span>
+                  Acepto los{' '}
+                  <Link to="/terminos" target="_blank" className="text-brand-600 font-medium underline">
+                    Términos de uso
+                  </Link>{' '}
+                  y la{' '}
+                  <Link to="/privacidad" target="_blank" className="text-brand-600 font-medium underline">
+                    Política de privacidad
+                  </Link>
+                  .
+                </span>
+              </label>
 
               {error && (
                 <p role="alert" className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">

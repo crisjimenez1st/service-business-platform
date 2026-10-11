@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import { CalendarCheck, ClipboardList, Wallet, Megaphone, Lock } from 'lucide-react';
 import OneFlowLogo from './OneFlowLogo';
 
@@ -50,6 +51,11 @@ export default function AuthShell({ title, subtitle, children }: { title: string
             {subtitle && <p className="text-sm mt-1 text-slate-300 lg:text-slate-500">{subtitle}</p>}
           </div>
           {children}
+          <p className="mt-6 text-center text-xs text-slate-400">
+            <Link to="/terminos" className="hover:text-slate-600 underline">Términos</Link>
+            {' · '}
+            <Link to="/privacidad" className="hover:text-slate-600 underline">Privacidad</Link>
+          </p>
         </div>
       </main>
     </div>
