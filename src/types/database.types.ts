@@ -649,6 +649,30 @@ export interface Database {
         Relationships: [];
       };
 
+      clinic_services: {
+        Row: {
+          id: string;
+          company_id: string;
+          name: string;
+          service_key: string;
+          category: string | null;
+          price: number | null;
+          active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          name: string;
+          category?: string | null;
+          price?: number | null;
+          active?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['clinic_services']['Insert']>;
+        Relationships: [];
+      };
+
       company_quote_sequences: {
         Row: {
           company_id: string;

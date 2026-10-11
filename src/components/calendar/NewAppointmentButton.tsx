@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react';
 import { Button } from '../ui';
 import NewAppointmentSheet from './NewAppointmentSheet';
 import { useCurrentCompany } from '../../contexts/useCurrentCompany';
+import { useClinicServices } from '../../hooks/useClinicServices';
 import { useClientsById } from '../../hooks/useClientsById';
 import { useTerms } from '../../hooks/useTerms';
 import { useClientStore } from '../../store/clientStore';
@@ -16,6 +17,7 @@ export default function NewAppointmentButton({ onCreated, className = '' }: { on
   const terms = useTerms();
   const { clients } = useClientsById();
   const createClient = useClientStore((s) => s.createClient);
+  const catalog = useClinicServices();
   const rules = useServiceRulesStore((s) => s.rules);
   const loadRules = useServiceRulesStore((s) => s.load);
   const [open, setOpen] = useState(false);
@@ -40,6 +42,7 @@ export default function NewAppointmentButton({ onCreated, className = '' }: { on
           clients={clients}
           clientLabel={terms.client}
           serviceOptions={rules.map((r) => r.serviceName)}
+          catalog={catalog}
           timezone={company?.timezone ?? 'America/Managua'}
           currency={company?.currency === 'USD' ? 'USD' : 'NIO'}
           onClose={() => setOpen(false)}
