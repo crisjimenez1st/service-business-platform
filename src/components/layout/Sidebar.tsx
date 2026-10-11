@@ -22,9 +22,11 @@ export default function Sidebar() {
     [
       'group relative flex items-center gap-3 rounded-2xl px-3 py-3 text-sm lg:text-base font-medium md:justify-center lg:justify-start',
       'transition-all duration-200 ease-out motion-reduce:transition-none',
-      'hover:bg-brand-50 hover:text-brand-700 hover:translate-x-0.5 motion-reduce:hover:translate-x-0',
+      'hover:bg-flow-lilac hover:text-brand-700 hover:translate-x-0.5 motion-reduce:hover:translate-x-0',
       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
-      isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-600',
+      isActive
+        ? 'bg-flow-lilac text-brand-700 font-semibold before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-full before:bg-gradient-to-b before:from-brand-600 before:to-flow-violet'
+        : 'text-slate-600',
     ].join(' ');
 
   // Nota: user.email siempre existe con auth por email+password; el
@@ -35,7 +37,7 @@ export default function Sidebar() {
   const initial = displayName.charAt(0).toUpperCase();
 
   return (
-    <aside className="hidden md:flex md:flex-col md:w-[84px] lg:w-64 shrink-0 border-r border-slate-200 bg-white h-screen sticky top-0 z-30">
+    <aside className="hidden md:flex md:flex-col md:w-[84px] lg:w-64 shrink-0 border-r border-violet-100 bg-white h-screen sticky top-0 z-30">
       <div className="flex items-center gap-2.5 px-4 py-5 border-b border-slate-100">
         <OneFlowMark size={36} className="shrink-0" />
         <span className="hidden lg:block font-semibold text-slate-900 truncate">
@@ -61,7 +63,7 @@ export default function Sidebar() {
 
       <div className="px-3 py-4 border-t border-slate-100">
         <div className="hidden lg:flex items-center gap-2.5 px-3 py-2 mb-1">
-          <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-semibold text-slate-600 shrink-0">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-600 to-flow-violet flex items-center justify-center text-xs font-semibold text-white shrink-0">
             {initial}
           </div>
           <div className="min-w-0">

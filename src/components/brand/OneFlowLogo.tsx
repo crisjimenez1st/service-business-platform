@@ -7,9 +7,11 @@ import OneFlowMark from './OneFlowMark';
 export default function OneFlowLogo({
   size = 'md',
   tagline,
+  tone = 'light',
 }: {
   size?: 'sm' | 'md' | 'lg';
   tagline?: string;
+  tone?: 'light' | 'dark';
 }) {
   const text = { sm: 'text-lg', md: 'text-2xl', lg: 'text-4xl' }[size];
   const mark = { sm: 24, md: 34, lg: 52 }[size];
@@ -21,10 +23,10 @@ export default function OneFlowLogo({
           <span className="bg-gradient-to-r from-[#0066FF] via-[#00D1C1] to-[#8A3FFC] bg-clip-text text-transparent">
             OneFlow
           </span>
-          <span className="text-slate-900 font-semibold"> Med</span>
+          <span className={`${tone === 'dark' ? 'text-white' : 'text-slate-900'} font-semibold`}> Med</span>
         </span>
       </div>
-      {tagline && <p className="text-sm text-slate-500 mt-2 text-center">{tagline}</p>}
+      {tagline && <p className={`text-sm mt-2 text-center ${tone === 'dark' ? 'text-slate-300' : 'text-slate-500'}`}>{tagline}</p>}
     </div>
   );
 }

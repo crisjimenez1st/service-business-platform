@@ -1,4 +1,4 @@
-import OneFlowLogo from '../components/brand/OneFlowLogo';
+import AuthShell from '../components/brand/AuthShell';
 import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Mail, Lock } from 'lucide-react';
@@ -47,16 +47,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col items-center mb-6 text-center">
-          <div className="mb-4">
-            <OneFlowLogo size="lg" />
-          </div>
-          <h1 className="text-xl font-semibold text-slate-900">Crear cuenta</h1>
-          <p className="text-sm text-slate-500 mt-1">Registra a tus pacientes y no olvides avisarles cuándo volver.</p>
-        </div>
-
+    <AuthShell title="Crear cuenta" subtitle="Empieza gratis y deja tu clínica en un solo flujo.">
         <Card>
           {checkEmail ? (
             <div className="text-center space-y-3">
@@ -127,7 +118,6 @@ export default function RegisterPage() {
             </Link>
           </p>
         )}
-      </div>
-    </div>
+    </AuthShell>
   );
 }

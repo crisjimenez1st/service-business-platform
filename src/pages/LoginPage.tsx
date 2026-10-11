@@ -1,4 +1,4 @@
-import OneFlowLogo from '../components/brand/OneFlowLogo';
+import AuthShell from '../components/brand/AuthShell';
 import { useState, type FormEvent } from 'react';
 import { Navigate, useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock } from 'lucide-react';
@@ -37,16 +37,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col items-center mb-6">
-          <div className="mb-4">
-            <OneFlowLogo size="lg" />
-          </div>
-          <h1 className="text-xl font-semibold text-slate-900">{t.login.title}</h1>
-          <p className="text-sm text-slate-500 mt-1 text-center">{t.login.subtitle}</p>
-        </div>
-
+    <AuthShell title={t.login.title} subtitle={t.login.subtitle}>
         <Card>
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div>
@@ -112,7 +103,6 @@ export default function LoginPage() {
             {t.login.createAccount}
           </Link>
         </p>
-      </div>
-    </div>
+    </AuthShell>
   );
 }
