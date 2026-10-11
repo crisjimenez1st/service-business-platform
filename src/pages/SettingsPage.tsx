@@ -5,6 +5,8 @@ import CurrencyPicker from '../components/settings/CurrencyPicker';
 import ServiceRulesCard from '../components/settings/ServiceRulesCard';
 import BookingLinkCard from '../components/settings/BookingLinkCard';
 import ReviewLinkCard from '../components/settings/ReviewLinkCard';
+import MfaCard from '../components/settings/MfaCard';
+import AccessLogCard from '../components/settings/AccessLogCard';
 import CurrencyChangeSheet from '../components/settings/CurrencyChangeSheet';
 import { useCurrentCompany } from '../contexts/useCurrentCompany';
 import { useAuth } from '../contexts/useAuth';
@@ -264,6 +266,12 @@ export default function SettingsPage() {
           <ServiceRulesCard />
         </section>
       )}
+      <section className="space-y-2">
+        <h2 className="text-base font-semibold text-slate-900">Seguridad</h2>
+        <MfaCard />
+        {isOwner && isClinic && <AccessLogCard companyId={company.id} timezone={company.timezone} />}
+      </section>
+
       {convertOpen && (
         <CurrencyChangeSheet
           open

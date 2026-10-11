@@ -29,6 +29,7 @@ import { formatTimeInTimezone, formatLongDateInTimezone } from '../utils/timezon
 import { formatCurrency } from '../utils/currency';
 import { getJobFinancials, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TONES } from '../utils/paymentStatus';
 import { formatCalendarDate } from '../utils/timezone';
+import { logRecordAccess } from '../services/accessLogService';
 import { t } from '../i18n/es';
 
 type TabKey = 'summary' | 'record' | 'service' | 'schedule' | 'evidence' | 'materials' | 'payments' | 'history';
@@ -116,6 +117,13 @@ export default function JobDetailPage() {
       cancelled = true;
     };
   }, [clinicalClientId, company?.businessType]);
+
+  // Constancia de quién abre la atención clínica de un paciente.
+  useEffect(() => {
+    if (activeTab === 'record' && companyId && clinicalClientId && company?.businessType !== 'technical_services') {
+      void logRecordAccess(companyId, clinicalClientId, 'view_clinical');
+    }
+  }, [activeTab, companyId, clinicalClientId, company?.businessType]);
 
   useEffect(() => {
     if (companyId) loadTechnicians(companyId);

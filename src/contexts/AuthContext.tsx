@@ -19,6 +19,8 @@ import { AuthContext, type AuthContextValue } from './authContextDefinition';
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [mfaTick, setMfaTick] = useState(0);
 
   useEffect(() => {
     // Resuelve la sesión ya persistida (Supabase la guarda en
@@ -39,6 +41,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.subscription.unsubscribe();
   }, []);
+
+  // Con verificación en dos pasos activa, una sesión que solo puso la contraseña (aal1) debe pedir el código.
+  const userId = session?.user.id;
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (!cancelled) setMfaRequired(!!data && data.nextLevel === 'aal2' && data.currentLevel !== 'aal2');
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, mfaTick]);
+
+  async function refreshMfa(): Promise<void> {
+    setMfaTick((n) => n + 1);
+  }
 
   async function signIn(email: string, password: string): Promise<{ error: string | null }> {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -64,6 +84,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn,
     signUp,
     signOut,
+    mfaRequired: !!session && mfaRequired,
+    refreshMfa,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../contexts/useAuth';
 import { useCurrentCompany } from '../../contexts/useCurrentCompany';
+import MfaChallenge from '../auth/MfaChallenge';
 
 /**
  * Protege rutas que requieren sesión activa de Supabase (ya no depende
@@ -15,7 +16,7 @@ import { useCurrentCompany } from '../../contexts/useCurrentCompany';
  * `allowedRoles` que compare contra useCurrentCompany().company?.role.
  */
 export default function ProtectedRoute() {
-  const { user, loading } = useAuth();
+  const { user, loading, mfaRequired } = useAuth();
   const { company, loading: companyLoading, error: companyError } = useCurrentCompany();
 
   if (loading || (user && companyLoading)) {
@@ -25,6 +26,8 @@ export default function ProtectedRoute() {
   if (!user) {
     return <Navigate to="/login" replace />;
   }
+
+  if (mfaRequired) return <MfaChallenge />;
 
   // Cuenta nueva sin empresa: primero se crea (nombre + tipo de negocio).
   if (!company && !companyError) {
