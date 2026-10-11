@@ -26,14 +26,15 @@ async function fetchRate(y, m, d) {
     body,
     signal: AbortSignal.timeout(8000),
   });
-  if (!res.ok) throw new Error(`BCN ${res.status}`);
   const xml = await res.text();
+  if (!res.ok) throw new Error(`BCN ${res.status}: ${xml.replace(/\s+/g, ' ').slice(0, 300)}`);
   const match = xml.match(/<RecuperaTC_DiaResult>\s*([\d.,]+)\s*<\/RecuperaTC_DiaResult>/);
   const rate = match ? Number(match[1].replace(',', '.')) : NaN;
   return Number.isFinite(rate) && rate > 0 ? rate : null;
 }
 
-export default async () => {
+export default async (req) => {
+  const debug = new URL(req.url).searchParams.has('debug');
   const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600' };
   try {
     const base = managuaToday();
@@ -49,7 +50,9 @@ export default async () => {
       }
     }
     return new Response(JSON.stringify({ error: 'sin_tasa' }), { status: 502, headers: { ...headers, 'Cache-Control': 'no-store' } });
-  } catch {
-    return new Response(JSON.stringify({ error: 'bcn_no_disponible' }), { status: 502, headers: { ...headers, 'Cache-Control': 'no-store' } });
+  } catch (err) {
+    // ?debug=1 muestra la causa para diagnosticar (solo texto del error, sin datos sensibles).
+    const detail = debug ? { detail: String(err && err.message), cause: String(err && err.cause && (err.cause.code || err.cause.message)) } : {};
+    return new Response(JSON.stringify({ error: 'bcn_no_disponible', ...detail }), { status: 502, headers: { ...headers, 'Cache-Control': 'no-store' } });
   }
 };
