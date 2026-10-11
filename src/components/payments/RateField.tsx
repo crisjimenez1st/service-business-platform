@@ -22,10 +22,10 @@ export default function RateField({ loading, error, official, manual, onManual, 
         </p>
       )}
       {error && !loading && (
-        <p className="text-amber-800">
+        <p className="text-slate-700">
           {error}{' '}
           <button type="button" onClick={onRetry} className="font-medium text-brand-700 underline">
-            Reintentar
+            Buscar de nuevo
           </button>
         </p>
       )}
