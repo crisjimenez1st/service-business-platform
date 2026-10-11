@@ -15,3 +15,7 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+# Función que consulta el tipo de cambio oficial del BCN (/.netlify/functions/bcn-rate).
+[functions]
+  directory = "netlify/functions"

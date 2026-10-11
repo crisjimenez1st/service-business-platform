@@ -5,9 +5,10 @@ import CurrencyPicker from '../components/settings/CurrencyPicker';
 import ServiceRulesCard from '../components/settings/ServiceRulesCard';
 import BookingLinkCard from '../components/settings/BookingLinkCard';
 import ReviewLinkCard from '../components/settings/ReviewLinkCard';
+import CurrencyChangeSheet from '../components/settings/CurrencyChangeSheet';
 import { useCurrentCompany } from '../contexts/useCurrentCompany';
 import { useAuth } from '../contexts/useAuth';
-import { changePassword, setBusinessType, setCompanyCurrency, setCompanyName } from '../services/companySetupService';
+import { changePassword, setBusinessType, setCompanyName } from '../services/companySetupService';
 import type { BusinessType, CurrencyCode } from '../types';
 import { PLAN_PRICE_USD, TRIAL_DAYS, getPlanState } from '../config/plan';
 import { formatLongDateInTimezone } from '../utils/timezone';
@@ -30,6 +31,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [convertOpen, setConvertOpen] = useState(false);
 
   if (!company) return null;
   const isOwner = company.role === 'owner';
@@ -51,13 +53,12 @@ export default function SettingsPage() {
       }
     }
     if (currentCurrency !== company.currency) {
-      const result = await setCompanyCurrency(company.id, currentCurrency);
-      if (result.error) {
-        setSaving(false);
-        setError(result.error.message);
-        await refresh();
-        return;
-      }
+      // El cambio de moneda convierte la lista de precios: se confirma con la tasa del BCN.
+      await refresh();
+      setSelected(null);
+      setSaving(false);
+      setConvertOpen(true);
+      return;
     }
     await refresh();
     setSelected(null);
@@ -262,6 +263,24 @@ export default function SettingsPage() {
           <h2 className="text-base font-semibold text-slate-900">Reglas de regreso</h2>
           <ServiceRulesCard />
         </section>
+      )}
+      {convertOpen && (
+        <CurrencyChangeSheet
+          open
+          companyId={company.id}
+          from={company.currency as CurrencyCode}
+          to={currentCurrency}
+          onClose={() => {
+            setConvertOpen(false);
+            setSelectedCurrency(null);
+          }}
+          onDone={async () => {
+            setConvertOpen(false);
+            setSelectedCurrency(null);
+            await refresh();
+            setSaved(true);
+          }}
+        />
       )}
     </div>
   );

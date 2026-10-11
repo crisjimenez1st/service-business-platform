@@ -673,6 +673,24 @@ export interface Database {
         Relationships: [];
       };
 
+      currency_changes: {
+        Row: {
+          id: string;
+          company_id: string;
+          from_currency: string;
+          to_currency: string;
+          rate: number;
+          rate_date: string;
+          rate_source: string;
+          services_converted: number;
+          changed_by: string | null;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+
       company_quote_sequences: {
         Row: {
           company_id: string;
@@ -693,6 +711,10 @@ export interface Database {
       create_company_for_current_user: {
         Args: { p_company_name: string; p_business_type?: string };
         Returns: string;
+      };
+      change_company_currency: {
+        Args: { p_company_id: string; p_currency: string; p_rate: number; p_rate_date: string; p_rate_source?: string };
+        Returns: Database['public']['Tables']['companies']['Row'];
       };
       set_company_business_type: {
         Args: { p_company_id: string; p_business_type: string };

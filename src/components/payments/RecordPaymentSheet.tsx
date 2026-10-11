@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Sheet, Button } from '../ui';
 import { INPUT_CLASS, TEXTAREA_CLASS } from './inputClasses';
+import PayInField from './PayInField';
+import { usePayIn } from '../../hooks/usePayIn';
 import { formatCurrency } from '../../utils/currency';
 import { PAYMENT_METHOD_LABELS, PAYMENT_TYPE_LABELS } from '../../utils/paymentStatus';
 import { isoToLocalDateTimeValue, localDateTimeToTimezoneIso } from '../../utils/timezone';
@@ -58,6 +60,7 @@ export default function RecordPaymentSheet({
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const payIn = usePayIn(currency, balance);
 
   function handleClose() {
     if (saving) return;
@@ -65,7 +68,7 @@ export default function RecordPaymentSheet({
   }
 
   function payFullBalance() {
-    setAmount(String(balance));
+    setAmount(payIn.fullTendered());
     setPaymentType('final');
     setError(null);
   }
@@ -76,7 +79,12 @@ export default function RecordPaymentSheet({
       setError(t.payments.amountRequired);
       return;
     }
-    if (toCents(parsed) > toCents(balance)) {
+    const docAmount = payIn.toDoc(parsed);
+    if (docAmount == null) {
+      setError('Falta la tasa de cambio. Escríbela para poder registrar el pago.');
+      return;
+    }
+    if (toCents(docAmount) > toCents(balance)) {
       setError(t.payments.amountExceeds);
       return;
     }
@@ -88,12 +96,12 @@ export default function RecordPaymentSheet({
     setSaving(true);
     setError(null);
     const message = await onSubmit({
-      amount: toCents(parsed) / 100,
+      amount: toCents(docAmount) / 100,
       paymentType,
       method,
       paidAt: localDateTimeToTimezoneIso(paidAt, timezone),
       reference: reference.trim() || undefined,
-      note: note.trim() || undefined,
+      note: [note.trim(), payIn.noteSuffix(parsed)].filter(Boolean).join(' · ') || undefined,
     });
     setSaving(false);
     if (message) {
@@ -125,9 +133,11 @@ export default function RecordPaymentSheet({
           <span className="font-semibold text-slate-900">{formatCurrency(balance, currency)}</span>
         </div>
 
+        <PayInField docCurrency={currency} state={payIn} />
+
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">
-            {t.payments.amountLabel} ({currency}) <span className="text-red-600">*</span>
+            {t.payments.amountLabel} ({payIn.payCurrency}) <span className="text-red-600">*</span>
           </label>
           <input
             type="number"
@@ -145,6 +155,11 @@ export default function RecordPaymentSheet({
           >
             {t.payments.payFullBalance}
           </button>
+          {payIn.other && Number(amount) > 0 && payIn.toDoc(Number(amount)) != null && (
+            <p className="mt-1 text-sm text-slate-600">
+              Se registra: <span className="font-semibold">{formatCurrency(payIn.toDoc(Number(amount)) ?? 0, currency)}</span>
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-3">

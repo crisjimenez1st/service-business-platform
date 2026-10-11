@@ -49,6 +49,31 @@ export async function setCompanyCurrency(companyId: string, currency: CurrencyCo
   }
 }
 
+/**
+ * Cambia la moneda de la empresa y convierte la lista de precios con la
+ * tasa indicada (solo owner; lo valida la RPC). Citas, planes y pagos
+ * existentes conservan su moneda.
+ */
+export async function changeCompanyCurrency(
+  companyId: string,
+  currency: CurrencyCode,
+  rate: { rate: number; date: string; source: 'bcn' | 'manual' }
+): Promise<ServiceResult<null>> {
+  try {
+    const { error } = await supabase.rpc('change_company_currency', {
+      p_company_id: companyId,
+      p_currency: currency,
+      p_rate: rate.rate,
+      p_rate_date: rate.date,
+      p_rate_source: rate.source,
+    });
+    if (error) return fail(mapSupabaseError(error));
+    return ok(null);
+  } catch (err) {
+    return fail(mapSupabaseError(err));
+  }
+}
+
 /** Cambia el tipo de negocio (solo owner; lo valida la RPC). Solo cambia vocabulario y menú. */
 export async function setBusinessType(companyId: string, businessType: BusinessType): Promise<ServiceResult<null>> {
   try {
