@@ -15,12 +15,17 @@ interface NewAppointmentSheetProps {
   currency: CurrencyCode;
   onClose: () => void;
   /** Crea al paciente nuevo (nombre y teléfono) y devuelve su id, o null si falló. */
-  onCreateClient: (input: { name: string; phone: string }) => Promise<string | null>;
+  onCreateClient: (input: { name: string; phone: string; birthDate?: string }) => Promise<string | null>;
   /** Devuelve un mensaje de error o null si se guardó. */
   onSave: (input: NewAppointmentInput) => Promise<string | null>;
   /** Para abrir la hoja ya con el paciente y/o el servicio elegidos (p. ej. desde una solicitud). */
   initialClientId?: string | null;
   initialService?: string;
+  /** Si hay datos de alguien que aún no es paciente, la hoja abre directo el alta con esos datos. */
+  initialNewName?: string;
+  initialNewPhone?: string;
+  /** Pide la fecha de nacimiento al crear (consultorios). */
+  requireBirthDate?: boolean;
 }
 
 /** Agendar una cita directa: paciente, servicio (obligatorio), fecha y hora, precio opcional. Se monta solo al abrir. */
@@ -36,12 +41,16 @@ export default function NewAppointmentSheet({
   onSave,
   initialClientId = null,
   initialService = '',
+  initialNewName = '',
+  initialNewPhone = '',
+  requireBirthDate = false,
 }: NewAppointmentSheetProps) {
   const [query, setQuery] = useState('');
   const [clientId, setClientId] = useState<string | null>(initialClientId);
-  const [creating, setCreating] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newPhone, setNewPhone] = useState('');
+  const [creating, setCreating] = useState(!initialClientId && !!initialNewName);
+  const [newName, setNewName] = useState(initialNewName);
+  const [newPhone, setNewPhone] = useState(initialNewPhone);
+  const [newBirth, setNewBirth] = useState('');
   const [service, setService] = useState(initialService);
   const [startValue, setStartValue] = useState('');
   const [price, setPrice] = useState('');
@@ -62,15 +71,20 @@ export default function NewAppointmentSheet({
       setError('Escribe el nombre y el teléfono.');
       return;
     }
+    if (requireBirthDate && !newBirth) {
+      setError('Escribe la fecha de nacimiento.');
+      return;
+    }
     setSaving(true);
     setError(null);
-    const id = await onCreateClient({ name: newName.trim(), phone: newPhone.trim() });
+    const id = await onCreateClient({ name: newName.trim(), phone: newPhone.trim(), birthDate: newBirth || undefined });
     setSaving(false);
     if (id) {
       setClientId(id);
       setCreating(false);
       setNewName('');
       setNewPhone('');
+      setNewBirth('');
     } else {
       setError('No se pudo crear. Revisa los datos e intenta de nuevo.');
     }
@@ -145,6 +159,17 @@ export default function NewAppointmentSheet({
               value={newPhone}
               onChange={(e) => setNewPhone(e.target.value)}
               placeholder="Teléfono"
+              className={INPUT_CLASS}
+            />
+            <label htmlFor="appt-new-birth" className="block text-xs font-medium text-slate-600 pt-1">
+              Fecha de nacimiento{requireBirthDate ? ' *' : ' (opcional)'}
+            </label>
+            <input
+              id="appt-new-birth"
+              type="date"
+              value={newBirth}
+              max={new Date().toISOString().slice(0, 10)}
+              onChange={(e) => setNewBirth(e.target.value)}
               className={INPUT_CLASS}
             />
             <div className="flex gap-2">

@@ -85,6 +85,25 @@ export async function setReviewUrl(companyId: string, url: string): Promise<Serv
   }
 }
 
+/** Guarda la promoción de cumpleaños (vacío la borra). Solo el dueño. */
+export async function setBirthdayPromo(companyId: string, text: string): Promise<ServiceResult<null>> {
+  const clean = text.trim();
+  if (clean.length > 300) return fail({ kind: 'unknown', message: 'La promoción es muy larga (máximo 300 letras).' });
+  try {
+    const { data, error } = await supabase
+      .from('companies')
+      .update({ birthday_promo: clean || null })
+      .eq('id', companyId)
+      .select('id')
+      .maybeSingle();
+    if (error) return fail(mapSupabaseError(error));
+    if (!data) return fail({ kind: 'forbidden', message: 'Solo el dueño puede cambiar esto.' });
+    return ok(null);
+  } catch (err) {
+    return fail(mapSupabaseError(err));
+  }
+}
+
 export async function setCompanyName(companyId: string, name: string): Promise<ServiceResult<null>> {
   const clean = name.trim();
   if (clean.length < 2) return fail({ kind: 'unknown', message: 'Escribe un nombre de al menos 2 letras.' });

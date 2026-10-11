@@ -80,7 +80,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
     const { data: companyRow, error: companyError } = await supabase
       .from('companies')
-      .select('id, name, currency, logo_url, timezone, business_type, trial_ends_at, paid_until, booking_token, booking_enabled, review_url')
+      .select('id, name, currency, logo_url, timezone, business_type, trial_ends_at, paid_until, booking_token, booking_enabled, review_url, birthday_promo')
       .eq('id', membership.company_id)
       .maybeSingle();
 
@@ -105,6 +105,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       bookingToken: companyRow.booking_token,
       bookingEnabled: companyRow.booking_enabled,
       reviewUrl: companyRow.review_url,
+      birthdayPromo: companyRow.birthday_promo,
       role: membership.role,
     });
     setLoading(false);

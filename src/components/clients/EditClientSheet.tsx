@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Sheet, Button } from '../ui';
 import type { Client } from '../../types';
 import type { ClientDomainInput } from '../../services/mappers/clientMapper';
+import { useCurrentCompany } from '../../contexts/useCurrentCompany';
 import { useTerms } from '../../hooks/useTerms';
 import { t } from '../../i18n/es';
 
@@ -33,6 +34,8 @@ export default function EditClientSheet({ open, client, onClose, onSave }: EditC
   const [birthDate, setBirthDate] = useState(client.birthDate ?? '');
   const [consent, setConsent] = useState(client.contactConsent ?? true);
   const terms = useTerms();
+  const { company } = useCurrentCompany();
+  const isClinic = company?.businessType === 'dental' || company?.businessType === 'medical';
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,6 +52,11 @@ export default function EditClientSheet({ open, client, onClose, onSave }: EditC
     }
     if (!phone.trim()) {
       setError(t.clients.phoneRequired);
+      return;
+    }
+
+    if (isClinic && !birthDate) {
+      setError('Escribe la fecha de nacimiento.');
       return;
     }
 
@@ -160,7 +168,7 @@ export default function EditClientSheet({ open, client, onClose, onSave }: EditC
 
         <div>
           <label htmlFor="client-birth" className="block text-sm font-medium text-slate-700 mb-1.5">
-            Fecha de nacimiento (opcional)
+            Fecha de nacimiento{isClinic ? ' *' : ' (opcional)'}
           </label>
           <input
             id="client-birth"

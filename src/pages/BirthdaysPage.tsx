@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Cake, MessageCircle } from 'lucide-react';
 import { Badge, Card, EmptyState } from '../components/ui';
+import PromoCard from '../components/marketing/PromoCard';
 import FilterChips from '../components/clients/FilterChips';
 import { useCurrentCompany } from '../contexts/useCurrentCompany';
 import { useClientsById } from '../hooks/useClientsById';
@@ -30,7 +32,7 @@ export default function BirthdaysPage() {
       .sort((a, b) => a.next.daysUntil - b.next.daysUntil);
   }, [clients, timezone]);
 
-  const withoutDate = clients.filter((c) => !c.birthDate).length;
+  const missing = clients.filter((c) => !c.birthDate);
   const visible = upcoming.filter((x) => x.next.daysUntil <= RANGE_DAYS[range]);
 
   if (!company || (company.role !== 'owner' && company.role !== 'office')) {
@@ -39,7 +41,14 @@ export default function BirthdaysPage() {
 
   return (
     <div className="space-y-4 pb-4">
-      <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">Cumpleaños</h1>
+      <div>
+        <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">Marketing</h1>
+        <p className="text-sm text-slate-600 mt-1">
+          Promociones para tus {terms.clients.toLowerCase()} que cumplen años. Un detalle a tiempo los hace volver.
+        </p>
+      </div>
+
+      <PromoCard />
 
       <FilterChips
         active={range}
@@ -66,9 +75,10 @@ export default function BirthdaysPage() {
           {visible.map(({ client, next }) => {
             const first = client.name.split(' ')[0];
             const canContact = client.contactConsent !== false;
+            const promo = company.birthdayPromo ? `\n\n🎁 Tu regalo de cumpleaños: ${company.birthdayPromo}` : '';
             const wa = buildWhatsAppLink(
               toWhatsAppNumber(client.whatsapp || client.phone, timezone),
-              `¡Feliz cumpleaños, ${first}! 🎂 De parte de todo el equipo de ${company.name} te deseamos un día lleno de alegría y salud. ¡Un abrazo!`,
+              `¡Feliz cumpleaños, ${first}! 🎂 De parte de todo el equipo de ${company.name} te deseamos un día lleno de alegría y salud.${promo}\n\n¡Un abrazo!`,
             );
             return (
               <li key={client.id}>
@@ -103,10 +113,22 @@ export default function BirthdaysPage() {
         </ul>
       )}
 
-      {withoutDate > 0 && (
-        <p className="text-xs text-slate-500">
-          {withoutDate} {withoutDate === 1 ? terms.client.toLowerCase() : terms.clients.toLowerCase()} sin fecha de nacimiento.
-        </p>
+      {missing.length > 0 && (
+        <details className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <summary className="cursor-pointer text-sm font-medium text-amber-900">
+            {missing.length} {missing.length === 1 ? terms.client.toLowerCase() : terms.clients.toLowerCase()} sin fecha de nacimiento: completa para no perder promociones
+          </summary>
+          <ul className="mt-2 divide-y divide-amber-100">
+            {missing.slice(0, 50).map((c) => (
+              <li key={c.id} className="flex items-center justify-between gap-2 py-2 text-sm">
+                <span className="text-slate-800 truncate">{c.name}</span>
+                <Link to={`/clients/${c.id}`} className="shrink-0 font-medium text-brand-700 min-h-9 inline-flex items-center">
+                  Completar
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
     </div>
   );

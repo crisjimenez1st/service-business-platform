@@ -28,6 +28,7 @@ interface NewClientSheetProps {
 export default function NewClientSheet({ open, onClose, onCreate }: NewClientSheetProps) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
@@ -43,6 +44,7 @@ export default function NewClientSheet({ open, onClose, onCreate }: NewClientShe
   const { company } = useCurrentCompany();
   const terms = useTerms();
   const timezone = company?.timezone ?? 'America/Managua';
+  const isClinic = company?.businessType === 'dental' || company?.businessType === 'medical';
 
   function reset() {
     setConsent(true);
@@ -53,6 +55,7 @@ export default function NewClientSheet({ open, onClose, onCreate }: NewClientShe
     setName('');
     setPhone('');
     setWhatsapp('');
+    setBirthDate('');
     setEmail('');
     setAddress('');
     setNotes('');
@@ -75,6 +78,11 @@ export default function NewClientSheet({ open, onClose, onCreate }: NewClientShe
       return;
     }
 
+    if (isClinic && !birthDate) {
+      setError('Escribe la fecha de nacimiento.');
+      return;
+    }
+
     const todayKey = getTodayKeyInTimezone(timezone);
     const dueDate = resolveFollowupDate(choice, customDate, todayKey);
     if (choice === 'custom' && !dueDate) {
@@ -88,6 +96,7 @@ export default function NewClientSheet({ open, onClose, onCreate }: NewClientShe
       name: name.trim(),
       phone: phone.trim(),
       whatsapp: whatsapp.trim() || undefined,
+      birthDate: birthDate || undefined,
       email: email.trim() || undefined,
       address: address.trim() || undefined,
       notes: notes.trim() || undefined,
@@ -136,6 +145,20 @@ export default function NewClientSheet({ open, onClose, onCreate }: NewClientShe
             type="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
+            className="w-full px-3 min-h-11 rounded-xl border border-slate-300 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:border-brand-500"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="new-client-birth" className="block text-sm font-medium text-slate-700 mb-1.5">
+            Fecha de nacimiento{isClinic ? ' *' : ' (opcional)'}
+          </label>
+          <input
+            id="new-client-birth"
+            type="date"
+            value={birthDate}
+            max={new Date().toISOString().slice(0, 10)}
+            onChange={(e) => setBirthDate(e.target.value)}
             className="w-full px-3 min-h-11 rounded-xl border border-slate-300 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:border-brand-500"
           />
         </div>
