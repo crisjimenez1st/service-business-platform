@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Sheet, Button } from '../ui';
 import { INPUT_CLASS, TEXTAREA_CLASS } from '../payments/inputClasses';
+import PayInField from '../payments/PayInField';
+import { usePayIn } from '../../hooks/usePayIn';
 import { formatCurrency } from '../../utils/currency';
 import { PAYMENT_METHOD_LABELS } from '../../utils/paymentStatus';
 import { isoToLocalDateTimeValue, localDateTimeToTimezoneIso } from '../../utils/timezone';
@@ -27,19 +29,22 @@ export default function PlanPaymentSheet({ open, onClose, planName, currency, ti
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const payIn = usePayIn(currency, balance);
 
   async function handleSubmit() {
     const n = Number(amount);
     if (!Number.isFinite(n) || cents(n) <= 0) return setError('Escribe el monto del abono.');
-    if (cents(n) > cents(balance)) return setError('El abono no puede ser mayor al saldo pendiente.');
+    const docAmount = payIn.toDoc(n);
+    if (docAmount == null) return setError('Falta la tasa de cambio. Escríbela para poder registrar el abono.');
+    if (cents(docAmount) > cents(balance)) return setError('El abono no puede ser mayor al saldo pendiente.');
     if (!paidAt) return setError('Indica la fecha del abono.');
     setSaving(true);
     setError(null);
     const message = await onSubmit({
-      amount: cents(n) / 100,
+      amount: cents(docAmount) / 100,
       method,
       paidAt: localDateTimeToTimezoneIso(paidAt, timezone),
-      note: note.trim() || undefined,
+      note: [note.trim(), payIn.noteSuffix(n)].filter(Boolean).join(' · ') || undefined,
     });
     setSaving(false);
     if (message) setError(message);
@@ -69,14 +74,20 @@ export default function PlanPaymentSheet({ open, onClose, planName, currency, ti
             Saldo pendiente: <span className="font-semibold text-slate-900">{formatCurrency(balance, currency)}</span>
           </p>
         </div>
+        <PayInField docCurrency={currency} state={payIn} />
         <div>
           <label htmlFor="pp-amount" className="block text-sm font-medium text-slate-700 mb-1.5">
-            Monto ({currency}) <span className="text-red-600">*</span>
+            Monto ({payIn.payCurrency}) <span className="text-red-600">*</span>
           </label>
           <input id="pp-amount" type="number" inputMode="decimal" min="0" step="0.01" className={INPUT_CLASS} value={amount} onChange={(e) => setAmount(e.target.value)} />
-          <button type="button" className="mt-2 text-sm font-medium text-brand-700 min-h-9" onClick={() => setAmount(String(balance))}>
+          <button type="button" className="mt-2 text-sm font-medium text-brand-700 min-h-9" onClick={() => setAmount(payIn.fullTendered())}>
             Pagar el saldo completo
           </button>
+          {payIn.other && Number(amount) > 0 && payIn.toDoc(Number(amount)) != null && (
+            <p className="mt-1 text-sm text-slate-600">
+              Se registra: <span className="font-semibold">{formatCurrency(payIn.toDoc(Number(amount)) ?? 0, currency)}</span>
+            </p>
+          )}
         </div>
         <div>
           <label htmlFor="pp-method" className="block text-sm font-medium text-slate-700 mb-1.5">
