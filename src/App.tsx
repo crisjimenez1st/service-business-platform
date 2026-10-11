@@ -16,6 +16,7 @@ import BookingPage from './pages/BookingPage';
 import RequestsPage from './pages/RequestsPage';
 import BirthdaysPage from './pages/BirthdaysPage';
 import ReviewsPage from './pages/ReviewsPage';
+import ServicesPage from './pages/ServicesPage';
 import ReceiptPage from './pages/ReceiptPage';
 import CalendarPage from './pages/CalendarPage';
 import JobsPage from './pages/JobsPage';
@@ -85,6 +86,7 @@ export default function App() {
                 <Route path="/equipment" element={<ComingSoonPage title={t.nav.equipment} />} />
                 <Route path="/warranties" element={<ComingSoonPage title={t.nav.warranties} />} />
                 <Route path="/reports" element={<ReportsPage />} />
+                <Route path="/services" element={<ServicesPage />} />
                 <Route path="/reviews" element={<ReviewsPage />} />
                 <Route path="/birthdays" element={<BirthdaysPage />} />
                 <Route path="/requests" element={<RequestsPage />} />

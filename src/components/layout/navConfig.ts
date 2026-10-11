@@ -17,6 +17,7 @@ import {
   Inbox,
   Megaphone,
   Star,
+  ListChecks,
 } from 'lucide-react';
 import { t } from '../../i18n/es';
 import type { BusinessTerms } from '../../i18n/businessTerms';
@@ -80,6 +81,7 @@ export function buildNavItems(businessType: BusinessType, terms: BusinessTerms):
       { label: 'Pagos', path: '/collections', icon: Wallet },
     ],
     secondary: [
+      { label: 'Servicios y precios', path: '/services', icon: ListChecks },
       { label: 'Solicitudes de cita', path: '/requests', icon: Inbox },
       { label: 'Reseñas', path: '/reviews', icon: Star },
       { label: 'Marketing', path: '/birthdays', icon: Megaphone },

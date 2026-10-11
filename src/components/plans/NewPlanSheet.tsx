@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Sheet, Button } from '../ui';
 import { INPUT_CLASS, TEXTAREA_CLASS } from '../payments/inputClasses';
+import ServicePicker from '../services/ServicePicker';
+import { useClinicServices } from '../../hooks/useClinicServices';
 import { PAYMENT_METHOD_LABELS } from '../../utils/paymentStatus';
 import type { CurrencyCode, PaymentMethod } from '../../types';
 
@@ -24,6 +26,7 @@ const cents = (v: number) => Math.round(v * 100);
 
 /** Crea un plan de tratamiento: nombre, precio total y, si ya pagó algo, el primer abono. Se monta solo al abrir. */
 export default function NewPlanSheet({ open, onClose, currency, onSubmit }: NewPlanSheetProps) {
+  const catalog = useClinicServices();
   const [name, setName] = useState('');
   const [total, setTotal] = useState('');
   const [initial, setInitial] = useState('');
@@ -71,6 +74,20 @@ export default function NewPlanSheet({ open, onClose, currency, onSubmit }: NewP
       }
     >
       <div className="space-y-4">
+        {catalog.length > 0 && (
+          <div>
+            <p className="block text-sm font-medium text-slate-700 mb-1.5">Elegir de tus servicios</p>
+            <ServicePicker
+              services={catalog}
+              currency={currency}
+              selectedName={name}
+              onPick={(s) => {
+                setName(s.name);
+                if (s.price !== undefined) setTotal(String(s.price));
+              }}
+            />
+          </div>
+        )}
         <div>
           <label htmlFor="plan-name" className="block text-sm font-medium text-slate-700 mb-1.5">
             Tratamiento <span className="text-red-600">*</span>

@@ -3,6 +3,7 @@ import { Inbox, MessageCircle, Phone } from 'lucide-react';
 import { Badge, Button, Card, EmptyState, ErrorState } from '../components/ui';
 import NewAppointmentSheet from '../components/calendar/NewAppointmentSheet';
 import { useCurrentCompany } from '../contexts/useCurrentCompany';
+import { useClinicServices } from '../hooks/useClinicServices';
 import { useClientsById } from '../hooks/useClientsById';
 import { useTerms } from '../hooks/useTerms';
 import { useClientStore } from '../store/clientStore';
@@ -22,6 +23,7 @@ export default function RequestsPage() {
   const terms = useTerms();
   const { clients } = useClientsById();
   const createClient = useClientStore((s) => s.createClient);
+  const catalog = useClinicServices();
   const rules = useServiceRulesStore((s) => s.rules);
   const loadRules = useServiceRulesStore((s) => s.load);
 
@@ -162,6 +164,7 @@ export default function RequestsPage() {
           clients={clients}
           clientLabel={terms.client}
           serviceOptions={rules.map((x) => x.serviceName)}
+          catalog={catalog}
           timezone={timezone}
           currency={company.currency === 'USD' ? 'USD' : 'NIO'}
           initialClientId={scheduling.clientId}

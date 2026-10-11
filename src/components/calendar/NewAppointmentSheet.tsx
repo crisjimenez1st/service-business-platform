@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Sheet, Button } from '../ui';
 import { INPUT_CLASS } from '../payments/inputClasses';
+import ServicePicker from '../services/ServicePicker';
 import { localDateTimeToTimezoneIso } from '../../utils/timezone';
-import type { Client, CurrencyCode } from '../../types';
+import type { Client, ClinicService, CurrencyCode } from '../../types';
 import type { NewAppointmentInput } from '../../services/appointmentService';
 
 interface NewAppointmentSheetProps {
@@ -11,6 +12,8 @@ interface NewAppointmentSheetProps {
   clientLabel: string;
   /** Servicios de las reglas de regreso (se ofrecen como botones). */
   serviceOptions: string[];
+  /** Catálogo de servicios con precio: si hay, se muestra un buscador y el precio se completa solo. */
+  catalog?: ClinicService[];
   timezone: string;
   currency: CurrencyCode;
   onClose: () => void;
@@ -34,6 +37,7 @@ export default function NewAppointmentSheet({
   clients,
   clientLabel,
   serviceOptions,
+  catalog = [],
   timezone,
   currency,
   onClose,
@@ -230,7 +234,19 @@ export default function NewAppointmentSheet({
           <label htmlFor="appt-service" className="block text-sm font-medium text-slate-700 mb-1.5">
             Servicio
           </label>
-          {serviceOptions.length > 0 && (
+          {catalog.length > 0 ? (
+            <div className="mb-2">
+              <ServicePicker
+                services={catalog}
+                currency={currency}
+                selectedName={service}
+                onPick={(s) => {
+                  setService(s.name);
+                  setPrice(s.price !== undefined ? String(s.price) : '');
+                }}
+              />
+            </div>
+          ) : serviceOptions.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2">
               {serviceOptions.map((name) => (
                 <button
@@ -255,7 +271,7 @@ export default function NewAppointmentSheet({
             value={service}
             onChange={(e) => setService(e.target.value)}
             maxLength={120}
-            placeholder={serviceOptions.length > 0 ? 'O escribe otro servicio' : 'Ej. Limpieza dental'}
+            placeholder={catalog.length > 0 || serviceOptions.length > 0 ? 'Servicio elegido (o escribe otro)' : 'Ej. Limpieza dental'}
             className={INPUT_CLASS}
           />
         </div>

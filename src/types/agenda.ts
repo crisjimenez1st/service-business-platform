@@ -138,3 +138,15 @@ export interface PublicBooking {
   companyPhone?: string;
   services: string[];
 }
+
+// ---------- Catálogo de servicios y precios ----------
+
+/** Un servicio que ofrece el consultorio (clinic_services, migración 027). */
+export interface ClinicService {
+  id: UUID;
+  name: string;
+  /** Tipo de tratamiento (Prevención, Ortodoncia...). */
+  category?: string;
+  price?: number;
+  active: boolean;
+}
