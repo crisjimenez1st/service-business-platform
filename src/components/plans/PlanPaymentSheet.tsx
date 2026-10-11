@@ -29,7 +29,7 @@ export default function PlanPaymentSheet({ open, onClose, planName, currency, ti
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const payIn = usePayIn(currency, balance);
+  const payIn = usePayIn(currency, balance, () => setAmount(''));
 
   async function handleSubmit() {
     const n = Number(amount);
