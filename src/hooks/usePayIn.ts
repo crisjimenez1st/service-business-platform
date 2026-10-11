@@ -8,7 +8,7 @@ import type { CurrencyCode } from '../types';
  * Estado + conversión para cobrar en la otra moneda. Se registra siempre en la
  * moneda de la clínica; el monto entregado y la tasa quedan en la nota.
  */
-export function usePayIn(docCurrency: CurrencyCode, balance: number) {
+export function usePayIn(docCurrency: CurrencyCode, balance: number, onCurrencyChange?: () => void) {
   const [payCurrency, setPayCurrency] = useState<CurrencyCode>(docCurrency);
   const rate = useRateInput();
   const other = payCurrency !== docCurrency;
@@ -16,6 +16,7 @@ export function usePayIn(docCurrency: CurrencyCode, balance: number) {
 
   function choose(c: CurrencyCode) {
     setPayCurrency(c);
+    onCurrencyChange?.(); // el monto escrito era de la otra moneda: se limpia
     if (c !== docCurrency && !rate.official && !rate.loading) void rate.fetchRate();
   }
 

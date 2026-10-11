@@ -60,7 +60,7 @@ export default function RecordPaymentSheet({
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const payIn = usePayIn(currency, balance);
+  const payIn = usePayIn(currency, balance, () => setAmount(''));
 
   function handleClose() {
     if (saving) return;
