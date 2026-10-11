@@ -1,3 +1,4 @@
+import { validatePassword } from '../utils/password';
 import type { BusinessType, CurrencyCode } from '../types';
 import { supabase } from '../lib/supabase';
 import { mapSupabaseError, ok, fail, type ServiceResult } from './errors/serviceError';
@@ -153,7 +154,8 @@ export async function changePassword(
   currentPassword: string,
   newPassword: string
 ): Promise<ServiceResult<null>> {
-  if (newPassword.length < 8) return fail({ kind: 'unknown', message: 'La contraseña nueva debe tener al menos 8 caracteres.' });
+  const pwError = validatePassword(newPassword);
+  if (pwError) return fail({ kind: 'unknown', message: pwError });
   try {
     const check = await supabase.auth.signInWithPassword({ email, password: currentPassword });
     if (check.error) return fail({ kind: 'unknown', message: 'La contraseña actual no es correcta.' });

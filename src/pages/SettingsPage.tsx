@@ -158,7 +158,7 @@ export default function SettingsPage() {
           </div>
           <p className="text-sm font-medium text-slate-700 pt-1">Cambiar contraseña</p>
           <input type="password" autoComplete="current-password" placeholder="Contraseña actual" value={pwCurrent} onChange={(e) => setPwCurrent(e.target.value)} className={inputCls} />
-          <input type="password" autoComplete="new-password" placeholder="Contraseña nueva (mínimo 8 caracteres)" value={pwNew} onChange={(e) => setPwNew(e.target.value)} className={inputCls} />
+          <input type="password" autoComplete="new-password" placeholder="Contraseña nueva (mínimo 10, con letras y números)" value={pwNew} onChange={(e) => setPwNew(e.target.value)} className={inputCls} />
           <input type="password" autoComplete="new-password" placeholder="Repite la contraseña nueva" value={pwRepeat} onChange={(e) => setPwRepeat(e.target.value)} className={inputCls} />
           {pwMsg && (
             <p
